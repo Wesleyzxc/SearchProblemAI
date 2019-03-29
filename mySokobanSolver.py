@@ -35,8 +35,7 @@ def my_team():
     of triplet of the form (student_number, first_name, last_name)
     
     '''
-#    return [ (1234567, 'Ada', 'Lovelace'), (1234568, 'Grace', 'Hopper'), (1234569, 'Eva', 'Tardos') ]
-    raise NotImplementedError()
+    return [ (9972676, 'Wesley', 'Kok'), (9930141, 'Daryl', 'Tan')]
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -63,6 +62,24 @@ def taboo_cells(warehouse):
        and the boxes.  
     '''
     ##         "INSERT YOUR CODE HERE"    
+    signsNotNeeded = ['@', '$'] # Player and box symbol
+    targetSquares = ['!', '.', '*'] # Player on target, empty target, and box on target symbol
+    wall = '#'
+    taboo = 'X'
+    
+    def corner_cell(warehouse, x, y):
+        walls_above_below = 0
+        walls_left_right = 0
+        for(sqX, sqY) in [(1,0), (-1,0)]:
+            if (warehouse[y + sqY][x + sqX] == wall): # check left and right squares of current x,y against wall square
+                walls_left_right += 1 
+                
+        for(sqX, sqY) in [(0,1), (0,-1)]:
+            if (warehouse[y + sqY][x + sqX] == wall): # check top and bottom squares of current x,y against wall square
+                walls_above_below += 1
+        
+        if (walls_above_below > 0) and (walls_left_right > 0):
+            return true
     raise NotImplementedError()
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
