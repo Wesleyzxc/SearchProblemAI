@@ -119,8 +119,11 @@ class SokobanPuzzle(search.Problem):
     #     to satisfy the interface of 'search.Problem'.
 
     
-    def __init__(self, warehouse):
-        raise NotImplementedError()
+    def __init__(self, warehouse, allow_taboo_push, macro):
+        if allow_taboo_push is None:
+            self.allow_taboo_push = True
+        if macro is None:
+            self.macro = True
 
     def actions(self, state):
         """
@@ -130,8 +133,16 @@ class SokobanPuzzle(search.Problem):
         'self.allow_taboo_push' and 'self.macro' should be tested to determine
         what type of list of actions is to be returned.
         """
-        raise NotImplementedError
-
+        if self.allow_taboo_push is True:
+            if self.macro is True:
+                #("taboo+macro")
+            else:
+                #("taboo-macro")
+        else:
+            if self.macro is True:
+                #("macro")
+            else:
+                #("no macro")
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 def check_action_seq(warehouse, action_seq):
