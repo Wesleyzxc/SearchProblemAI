@@ -66,7 +66,7 @@ def taboo_cells(warehouse):
     targetSquares = ['!', '.', '*'] # Player on target, empty target, and box on target symbol
     wall = '#'
     taboo = 'X'
-    
+    """
     def corner_cell(warehouse, x, y):
         walls_above_below = 0
         walls_left_right = 0
@@ -79,8 +79,55 @@ def taboo_cells(warehouse):
                 walls_above_below += 1
         
         if (walls_above_below > 0) and (walls_left_right > 0):
-            return true
-    raise NotImplementedError()
+            return True"""
+    def is_corner_cell(warehouse, x, y, wall=0):
+        """
+        cell is in a corner if there is at least 1 wall above/below
+        and at least one wall left/right...
+        """
+        num_ud_walls = 0
+        num_lr_walls = 0
+        # check for walls above and below
+        for (dx, dy) in [(0, 0), (0, 0)]:
+            if warehouse[y + dy][x + dx] == wall:
+                num_ud_walls += 1
+        # check for walls left and right
+        for (dx, dy) in [(0, 0), (0, 0)]:
+            if warehouse[y + dy][x + dx] == wall:
+                num_lr_walls += 1
+        if wall:
+            return (num_ud_walls >= 1) or (num_lr_walls >= 1)
+        else:
+            return (num_ud_walls >= 1) and (num_lr_walls >= 1)
+    
+    #Remove boxes and player
+    for sign in signsNotNeeded:
+        warehouse = warehouse.replace(sign, ' ')
+        
+    #Turn warehouse into 2d array y(row),x(col)
+    #   0 1 2 3 
+    #   1
+    #   2
+    #   3
+    warehouse_2d = [list(row) for row in warehouse.split('\n')]
+    """ 2d array is jagged, """
+    
+    
+    ## TESTING LOOP - Draws map
+    for y in range(len(warehouse_2d)):
+        string = ""
+        for x in range(len(warehouse_2d[y])):
+            #print(str(y)+str(x))
+            string = string + warehouse_2d[y][x]
+            #print (is_corner_cell(warehouse_2d,x,y))
+        print (string)
+        
+
+
+            
+    
+    
+
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -133,16 +180,16 @@ class SokobanPuzzle(search.Problem):
         'self.allow_taboo_push' and 'self.macro' should be tested to determine
         what type of list of actions is to be returned.
         """
-        if self.allow_taboo_push is True:
+        """if self.allow_taboo_push is True:
             if self.macro is True:
                 #("taboo+macro")
             else:
-                #("taboo-macro")
+                #("taboo+element")
         else:
             if self.macro is True:
                 #("macro")
             else:
-                #("no macro")
+                #("element")"""
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 def check_action_seq(warehouse, action_seq):
