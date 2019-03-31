@@ -71,11 +71,11 @@ def taboo_cells(warehouse):
         walls_above_below = 0
         walls_left_right = 0
         # check for walls above and below
-        for (dx, dy) in [(0, 0), (0, 0)]:
+        for (dx, dy) in [(0, -1), (0, 1)]:
             if warehouse[y + dy][x + dx] == wall:
                 walls_above_below += 1
         # check for walls left and right
-        for (dx, dy) in [(0, 0), (0, 0)]:
+        for (dx, dy) in [(-1, 0), (1, 0)]:
             if warehouse[y + dy][x + dx] == wall:
                 walls_left_right += 1
         if alongWall:
@@ -83,10 +83,7 @@ def taboo_cells(warehouse):
         else:
             return (walls_above_below >= 1) and (walls_left_right >= 1)
     
-    #Remove boxes and player
-    for sign in signsNotNeeded:
-        warehouse = warehouse.replace(sign, ' ')
-        
+    warehouse = str(warehouse)        
         
     #Turn warehouse into 2d array y(row),x(col)
     #   0 1 2 3 
@@ -94,6 +91,7 @@ def taboo_cells(warehouse):
     #   2
     #   3
     warehouse = str(warehouse)
+    #Remove boxes and player
     for char in signsNotNeeded:
         warehouse = warehouse.replace(char, ' ')
         
@@ -104,13 +102,16 @@ def taboo_cells(warehouse):
     def rule1(warehouse_2d):
         for y in range(len(warehouse_2d) - 1):
             inside = False
+            #Top wall test
+            #Left wall test
             for x in range(len(warehouse_2d[0]) - 1):
                 # inside when loop hits the first wall
                 if not inside:
                     if warehouse_2d[y][x] == wall:
                         inside = True
+                        #print("Inside") #working correctly
                 else:
-                    # check if cell from x: is empty
+                    # check if cell from x:end is empty
                     if all([cell == ' ' for cell in warehouse_2d[y][x:]]):
                         break
                     # only changes if its an empty square, then check if corner
@@ -118,6 +119,7 @@ def taboo_cells(warehouse):
                         if warehouse_2d[y][x] != wall:
                             if check_corner_square(warehouse_2d, x, y):
                                 warehouse_2d[y][x] = taboo
+        return warehouse_2d
         
         
     def rule2(warehouse_2d):
@@ -137,10 +139,20 @@ def taboo_cells(warehouse):
                             if all([check_corner_square(warehouse_2d, nextNextSquare, y, 1) 
                                     for nextNextSquare in range(x+1, nextSquare + nextNextSquare + 1)]):
                                 for edgeSquares in range(x+1, nextSquare + nextNextSquare + 1):
-                                    warehouse_2d[y][edgeSquares] = 'X'
+                                    warehouse_2d[y][edgeSquares] = taboo
+        #return warehouse_2d
                     # to check up and down
                     # To be added
+    warehouse_2d = rule1(warehouse_2d) #Tested working
+    
+    #Convert 2D array back into string
+    warehouse_taboo = '\n'.join([''.join(line) for line in warehouse_2d])
+    #Remove target square symbols
+    for char in targetSquares:
+        warehouse_taboo = warehouse_taboo.replace(char, ' ')
         
+    
+    return warehouse_taboo
 
             
     
