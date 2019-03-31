@@ -62,67 +62,85 @@ def taboo_cells(warehouse):
        and the boxes.  
     '''
     ##         "INSERT YOUR CODE HERE"    
-    signsNotNeeded = ['@', '$'] # Player and box symbol
-    targetSquares = ['!', '.', '*'] # Player on target, empty target, and box on target symbol
+    signsNotNeeded = ['@', '$'] # character and box symbol
+    targetSquares = ['!', '.', '*'] # Player on goal, empty goal, and box on goal symbol
     wall = '#'
     taboo = 'X'
-    """
-    def corner_cell(warehouse, x, y):
+
+    def check_corner_square(warehouse, x, y, alongWall=0):
         walls_above_below = 0
         walls_left_right = 0
-        for(sqX, sqY) in [(1,0), (-1,0)]:
-            if (warehouse[y + sqY][x + sqX] == wall): # check left and right squares of current x,y against wall square
-                walls_left_right += 1 
-                
-        for(sqX, sqY) in [(0,1), (0,-1)]:
-            if (warehouse[y + sqY][x + sqX] == wall): # check top and bottom squares of current x,y against wall square
-                walls_above_below += 1
-        
-        if (walls_above_below > 0) and (walls_left_right > 0):
-            return True"""
-    def is_corner_cell(warehouse, x, y, wall=0):
-        """
-        cell is in a corner if there is at least 1 wall above/below
-        and at least one wall left/right...
-        """
-        num_ud_walls = 0
-        num_lr_walls = 0
         # check for walls above and below
         for (dx, dy) in [(0, 0), (0, 0)]:
             if warehouse[y + dy][x + dx] == wall:
-                num_ud_walls += 1
+                walls_above_below += 1
         # check for walls left and right
         for (dx, dy) in [(0, 0), (0, 0)]:
             if warehouse[y + dy][x + dx] == wall:
-                num_lr_walls += 1
-        if wall:
-            return (num_ud_walls >= 1) or (num_lr_walls >= 1)
+                walls_left_right += 1
+        if alongWall:
+            return (walls_above_below >= 1) or (walls_left_right >= 1)
         else:
-            return (num_ud_walls >= 1) and (num_lr_walls >= 1)
+            return (walls_above_below >= 1) and (walls_left_right >= 1)
     
     #Remove boxes and player
     for sign in signsNotNeeded:
         warehouse = warehouse.replace(sign, ' ')
+        
         
     #Turn warehouse into 2d array y(row),x(col)
     #   0 1 2 3 
     #   1
     #   2
     #   3
+    warehouse = str(warehouse)
+    for char in signsNotNeeded:
+        warehouse = warehouse.replace(char, ' ')
+        
     warehouse_2d = [list(row) for row in warehouse.split('\n')]
     """ 2d array is jagged, """
     
-    
-    ## TESTING LOOP - Draws map
-    for y in range(len(warehouse_2d)):
-        string = ""
-        for x in range(len(warehouse_2d[y])):
-            #print(str(y)+str(x))
-            string = string + warehouse_2d[y][x]
-            #print (is_corner_cell(warehouse_2d,x,y))
-        print (string)
+    ''' rule 1 function '''
+    def rule1(warehouse_2d):
+        for y in range(len(warehouse_2d) - 1):
+            inside = False
+            for x in range(len(warehouse_2d[0]) - 1):
+                # inside when loop hits the first wall
+                if not inside:
+                    if warehouse_2d[y][x] == wall:
+                        inside = True
+                else:
+                    # check if cell from x: is empty
+                    if all([cell == ' ' for cell in warehouse_2d[y][x:]]):
+                        break
+                    # only changes if its an empty square, then check if corner
+                    if warehouse_2d[y][x] not in targetSquares:
+                        if warehouse_2d[y][x] != wall:
+                            if check_corner_square(warehouse_2d, x, y):
+                                warehouse_2d[y][x] = taboo
         
-
+        
+    def rule2(warehouse_2d):
+        for y in range(1, len(warehouse_2d)-1):
+            for x in range(1, len(warehouse_2d[0]) - 1):
+                if warehouse_2d[y][x] == taboo and check_corner_square(warehouse_2d, x, y):
+                    currentRow = warehouse_2d[y][x+1:]
+                    currentColumn = [eachRow[x] for eachRow in warehouse_2d[y + 1:][:]]
+                    
+                    # to check across left to right
+                    for nextSquare in range(len(currentRow)):
+                        #if any of the do not touch symbols
+                        if currentRow[nextSquare] in targetSquares or currentRow[nextSquare] == wall:
+                            break 
+                        
+                        if currentRow[nextSquare] == taboo and check_corner_square(warehouse_2d, x + nextSquare + 1, y):
+                            if all([check_corner_square(warehouse_2d, nextNextSquare, y, 1) 
+                                    for nextNextSquare in range(x+1, nextSquare + nextNextSquare + 1)]):
+                                for edgeSquares in range(x+1, nextSquare + nextNextSquare + 1):
+                                    warehouse_2d[y][edgeSquares] = 'X'
+                    # to check up and down
+                    # To be added
+        
 
             
     
