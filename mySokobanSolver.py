@@ -25,7 +25,6 @@ import search
 import sokoban
 
 
-
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 
@@ -183,8 +182,7 @@ class SokobanPuzzle(search.Problem):
     If self.macro is set True, the 'actions' function should return 
     macro actions. If self.macro is set False, the 'actions' function should 
     return elementary actions.
-    
-    
+        
     '''
     #
     #         "INSERT YOUR CODE HERE"
@@ -194,6 +192,8 @@ class SokobanPuzzle(search.Problem):
     #     Note that you will need to add several functions to 
     #     complete this class. For example, a 'result' function is needed
     #     to satisfy the interface of 'search.Problem'.
+#    self.allow_taboo_push = False
+#    self.macro = False
 
     
     def __init__(self, warehouse, allow_taboo_push, macro):
@@ -210,16 +210,17 @@ class SokobanPuzzle(search.Problem):
         'self.allow_taboo_push' and 'self.macro' should be tested to determine
         what type of list of actions is to be returned.
         """
-        """if self.allow_taboo_push is True:
-            if self.macro is True:
-                #("taboo+macro")
-            else:
-                #("taboo+element")
-        else:
-            if self.macro is True:
-                #("macro")
-            else:
-                #("element")"""
+#        if self.allow_taboo_push is True:
+#            if self.macro is True:
+#                #("taboo+macro")
+#            else:
+#                #("taboo+element")
+#        else:
+#            if self.macro is True:
+#                #("macro")
+#            else:
+#                #("element")
+        
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 def check_action_seq(warehouse, action_seq):
@@ -273,7 +274,38 @@ def solve_sokoban_elem(warehouse):
     raise NotImplementedError()
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
+class CanGoThereProblem(search.Problem):
+    
+    def __init__(self, initial, warehouse, goal=None):
+        self.initial = initial
+        self.goal = goal
+        self.ogwarehouse = warehouse
+        signsNotNeeded = ['$', '.', '!', '*']
+        warehouseNew = str(warehouse)
+        #Remove boxes and player
+        for char in signsNotNeeded:
+            warehouseNew = warehouseNew.replace(char, ' ')
+        self.warehouse = warehouseNew
+        
+    '''cost = 1 for all'''
+    def value(self, state):
+        return 1 
+    
+    ''' all possible actions'''
+    def actions(self):
+        canMove = []
+        uprightleftdown = [(1,0), (0,1), (-1,0), (0,-1)]
+        for validMove in uprightleftdown:
+            newPos = (self.initial[0] + validMove[0], self.initial[1] + validMove[1])
+            
+            if newPos not in self.ogwarehouse.walls:
+                yield validMove
+                
+    '''resulting state after action'''
+    def result(self, state, action):
+        return (state[0] + action[0], state[1] + action[1])            
+  
+      
 def can_go_there(warehouse, dst):
     '''    
     Determine whether the worker can walk to the cell dst=(row,column) 
@@ -284,7 +316,20 @@ def can_go_there(warehouse, dst):
     @return
       True if the worker can walk to cell dst=(row,column) without pushing any box
       False otherwise
-    '''
+    '''  
+    def heuristic(GoThereProblem):
+        state = GoThereProblem.state
+        # distance = sqrt(xdiff^2 + ydiff^2). Basic distance formula heuristic.
+        return math.sqrt(((state[1] - math.pow(dst[1],2))
+                         + ((state[0] - math.pow(dst[0], 2)))))
+
+    dst = (dst[1], dst[0]) # flip it
+
+    # Use an A* graph search on the FindPathProblem search
+    node = astar_graph_search(CanGoThereProblem(wh.worker, warehouse, dst),
+                       heuristic)
+    return node is not None
+        
     
     ##         "INSERT YOUR CODE HERE"
     

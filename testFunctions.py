@@ -5,10 +5,13 @@ Created on Sat Mar 30 21:16:36 2019
 @author: n9972676
 """
 from sokoban import * 
+from search import *
+import search
+import math 
 
 wh = Warehouse()
 
-wh.load_warehouse("warehouses/warehouse_203.txt")
+wh.load_warehouse("warehouses/warehouse_01.txt")
 warehouse_2d = [list(row) for row in str(wh).split('\n')]
 
 squares_to_remove = ['$', '@']
@@ -81,24 +84,24 @@ def checkInside(warehouse):
     return newArray
 
 def rule1(warehouse_2d):
-    for y in range(len(warehouse_2d) - 1):
-        inside = False
-        for x in range(len(warehouse_2d[0]) - 1):
-            # move through row in warehouse until we hit first wall
-            # means we are now inside the warehouse
-            if not inside:
-                if warehouse_2d[y][x] == wall_square:
-                    inside = True
-            else:
-                # check if all the cells to the right of current cell are empty
-                # means we are now outside the warehouse
-                if all([cell == ' ' for cell in warehouse_2d[y][x:]]):
-                    break
-                if warehouse_2d[y][x] not in target_squares:
-                    if warehouse_2d[y][x] != wall_square:
-                        if is_corner_cell(warehouse_2d, x, y):
-                            warehouse_2d[y][x] = taboo_square
-    return warehouse_2d
+        for y in range(len(warehouse_2d) - 1):
+            inside = False
+            for x in range(len(warehouse_2d[0]) - 1):
+                # move through row in warehouse until we hit first wall
+                # means we are now inside the warehouse
+                if not inside:
+                    if warehouse_2d[y][x] == wall_square:
+                        inside = True
+                else:
+                    # check if all the cells to the right of current cell are empty
+                    # means we are now outside the warehouse
+                    if all([cell == ' ' for cell in warehouse_2d[y][x:]]):
+                        break
+                    if warehouse_2d[y][x] not in target_squares:
+                        if warehouse_2d[y][x] != wall_square:
+                            if is_corner_cell(warehouse_2d, x, y):
+                                warehouse_2d[y][x] = taboo_square
+        return warehouse_2d
                             
 def rule2(warehouse_2d):
         for y in range(1, len(warehouse_2d) - 1):
@@ -130,7 +133,62 @@ def rule2(warehouse_2d):
                                     warehouse_2d[y4][x] = 'X'
         return warehouse_2d
 
-taboo_Check = rule2(rule1(warehouse_2d))
+class CanGoThereProblem(search.Problem):
+    
+    def __init__(self, initial, warehouse, goal=None):
+        self.initial = initial
+        self.goal = goal
+        self.warehouse = warehouse
+        
+    '''cost = 1 for all'''
+    def value(self, state):
+        return 1 
+    
+    ''' all possible actions'''
+    def actions(self, state):
+        uprightleftdown = [(1,0), (0,1), (-1,0), (0,-1)]
+        for validMove in uprightleftdown:
+            newPos = (state[0] + validMove[0], state[1] + validMove[1])
+            
+            if newPos not in self.warehouse.walls:
+                yield validMove
+                
+    '''resulting state after action'''
+    def result(self, state, action):
+        return (state[0] + action[0], state[1] + action[1])
+    
+def can_go_there(warehouse, dst):
+    '''    
+    Determine whether the worker can walk to the cell dst=(row,column) 
+    without pushing any box.
+    
+    @param warehouse: a valid Warehouse object
+
+    @return
+      True if the worker can walk to cell dst=(row,column) without pushing any box
+      False otherwise
+    '''
+    
+    def heuristic(GoThereProblem):
+        state = GoThereProblem.state
+        # distance = sqrt(xdiff^2 + ydiff^2). Basic distance formula heuristic.
+        return math.sqrt(((state[1] - math.pow(dst[1],2))
+                         + ((state[0] - math.pow(dst[0], 2)))))
+
+    dst = (dst[1], dst[0]) # flip it
+
+    # Use an A* graph search on the FindPathProblem search
+    node = astar_graph_search(CanGoThereProblem(wh.worker, warehouse, dst),
+                       heuristic)
+    return node is not None
+    
+taboo_Check = rule2((rule1(warehouse_2d)))
+
+warehouse_str = '\n'.join([''.join(line) for line in taboo_Check])
+
+# remove the remaining target_squares
+for char in target_squares:
+    warehouse_str = warehouse_str.replace(char, ' ')
 
 testrow = ['#', '#', '#', ' ', ' ', '#', '#']
 wallLength(testrow, 3)
