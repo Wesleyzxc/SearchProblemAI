@@ -21,10 +21,11 @@ SokobanPuzzle.macro = False
 # you have to use the 'search.py' file provided
 # as your code will be tested with this specific file
 import search
-
 import sokoban
-
-
+import math
+from sokoban import * 
+from search import *
+import time
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 
@@ -82,19 +83,17 @@ def taboo_cells(warehouse):
         else:
             return (walls_above_below >= 1) and (walls_left_right >= 1)
     
-    warehouse = str(warehouse)        
-        
     #Turn warehouse into 2d array y(row),x(col)
     #   0 1 2 3 
     #   1
     #   2
     #   3
-    warehouse = str(warehouse)
+    warehouseStr = str(warehouse)
     #Remove boxes and player
     for char in signsNotNeeded:
-        warehouse = warehouse.replace(char, ' ')
+        warehouseStr = warehouseStr.replace(char, ' ')
         
-    warehouse_2d = [list(row) for row in warehouse.split('\n')]
+    warehouse_2d = [list(row) for row in warehouseStr.split('\n')]
     """ 2d array is jagged, """
     
     ''' rule 1 function '''
@@ -105,6 +104,7 @@ def taboo_cells(warehouse):
             #Left wall test
             for x in range(len(warehouse_2d[0]) - 1):
                 # inside when loop hits the first wall
+                
                 if not inside:
                     if warehouse_2d[y][x] == wall:
                         inside = True
@@ -117,7 +117,8 @@ def taboo_cells(warehouse):
                     if warehouse_2d[y][x] not in targetSquares:
                         if warehouse_2d[y][x] != wall:
                             if check_corner_square(warehouse_2d, x, y):
-                                warehouse_2d[y][x] = taboo
+                                if can_go_there(warehouse, (x,y)):
+                                    warehouse_2d[y][x] = taboo
         return warehouse_2d
         
         
@@ -279,33 +280,25 @@ class CanGoThereProblem(search.Problem):
     def __init__(self, initial, warehouse, goal=None):
         self.initial = initial
         self.goal = goal
-        self.ogwarehouse = warehouse
-        signsNotNeeded = ['$', '.', '!', '*']
-        warehouseNew = str(warehouse)
-        #Remove boxes and player
-        for char in signsNotNeeded:
-            warehouseNew = warehouseNew.replace(char, ' ')
-        self.warehouse = warehouseNew
+        self.warehouse = warehouse
         
     '''cost = 1 for all'''
     def value(self, state):
         return 1 
     
     ''' all possible actions'''
-    def actions(self):
-        canMove = []
+    def actions(self, state):
         uprightleftdown = [(1,0), (0,1), (-1,0), (0,-1)]
         for validMove in uprightleftdown:
-            newPos = (self.initial[0] + validMove[0], self.initial[1] + validMove[1])
+            newPos = (state[0] + validMove[0], state[1] + validMove[1])
             
-            if newPos not in self.ogwarehouse.walls:
+            if newPos not in self.warehouse.walls:
                 yield validMove
                 
     '''resulting state after action'''
     def result(self, state, action):
-        return (state[0] + action[0], state[1] + action[1])            
-  
-      
+        return (state[0] + action[0], state[1] + action[1])
+    
 def can_go_there(warehouse, dst):
     '''    
     Determine whether the worker can walk to the cell dst=(row,column) 
@@ -316,12 +309,12 @@ def can_go_there(warehouse, dst):
     @return
       True if the worker can walk to cell dst=(row,column) without pushing any box
       False otherwise
-    '''  
+    '''
+    
     def heuristic(GoThereProblem):
         state = GoThereProblem.state
         # distance = sqrt(xdiff^2 + ydiff^2). Basic distance formula heuristic.
-        return math.sqrt(((state[1] - math.pow(dst[1],2))
-                         + ((state[0] - math.pow(dst[0], 2)))))
+        return math.sqrt((math.pow(state[1] - dst[1], 2)) + (math.pow(state[0] - dst[0], 2)))
 
     dst = (dst[1], dst[0]) # flip it
 
@@ -329,12 +322,6 @@ def can_go_there(warehouse, dst):
     node = astar_graph_search(CanGoThereProblem(wh.worker, warehouse, dst),
                        heuristic)
     return node is not None
-        
-    
-    ##         "INSERT YOUR CODE HERE"
-    
-    raise NotImplementedError()
-
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 def solve_sokoban_macro(warehouse):
@@ -362,3 +349,15 @@ def solve_sokoban_macro(warehouse):
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+
+''' TESTING OF FUNCTION DIRECTLY ON THIS FILE CAN DELETE AFTER
+wh = Warehouse()
+t0 = time.time()
+wh.load_warehouse("warehouses/warehouse_203.txt")
+taboo_Check = taboo_cells(wh)
+
+t1 = time.time()
+
+print ("Solver took ",t1-t0, ' seconds')
+
+'''

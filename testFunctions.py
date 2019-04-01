@@ -172,8 +172,8 @@ def can_go_there(warehouse, dst):
     def heuristic(GoThereProblem):
         state = GoThereProblem.state
         # distance = sqrt(xdiff^2 + ydiff^2). Basic distance formula heuristic.
-        return math.sqrt(((state[1] - math.pow(dst[1],2))
-                         + ((state[0] - math.pow(dst[0], 2)))))
+        return math.sqrt((math.pow(state[1] - dst[1], 2))
+                         + (math.pow(state[0] - dst[0], 2)))
 
     dst = (dst[1], dst[0]) # flip it
 
