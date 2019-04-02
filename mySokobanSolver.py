@@ -282,7 +282,7 @@ class CanGoThereProblem(search.Problem):
         self.goal = goal
         self.warehouse = warehouse
         
-    '''cost = 1 for all'''
+    '''cost = 1 for all Daryl - pancake used astar but no value?'''
     def value(self, state):
         return 1 
     
@@ -293,11 +293,13 @@ class CanGoThereProblem(search.Problem):
             newPos = (state[0] + validMove[0], state[1] + validMove[1])
             
             if newPos not in self.warehouse.walls:
-                yield validMove
+                if newPos not in self.warehouse.boxes:
+                    yield validMove
                 
     '''resulting state after action'''
     def result(self, state, action):
         return (state[0] + action[0], state[1] + action[1])
+    
     
 def can_go_there(warehouse, dst):
     '''    
@@ -313,13 +315,13 @@ def can_go_there(warehouse, dst):
     
     def heuristic(GoThereProblem):
         state = GoThereProblem.state
-        # distance = sqrt(xdiff^2 + ydiff^2). Basic distance formula heuristic.
+        # distance = sqrt(xdist^2 + ydist^2). Basic distance formula heuristic.
         return math.sqrt((math.pow(state[1] - dst[1], 2)) + (math.pow(state[0] - dst[0], 2)))
 
     dst = (dst[1], dst[0]) # flip it
 
-    # Use an A* graph search on the FindPathProblem search
-    node = astar_graph_search(CanGoThereProblem(wh.worker, warehouse, dst),
+    # Use an A* graph search on the CanGoThereProblem search
+    node = astar_graph_search(CanGoThereProblem(warehouse.worker, warehouse, dst),
                        heuristic)
     return node is not None
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
