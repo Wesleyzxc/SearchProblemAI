@@ -178,7 +178,7 @@ def can_go_there(warehouse, dst):
     dst = (dst[1], dst[0]) # flip it
 
     # Use an A* graph search on the FindPathProblem search
-    node = astar_graph_search(CanGoThereProblem(wh.worker, warehouse, dst),
+    node = astar_graph_search(CanGoThereProblem(warehouse.worker, warehouse, dst),
                        heuristic)
     return node is not None
     

@@ -25,7 +25,7 @@ from mySokobanSolver import solve_sokoban_elem, can_go_there, solve_sokoban_macr
 def test_taboo_cells():
     wh = Warehouse()
     wh.load_warehouse("./warehouses/warehouse_01.txt")
-    expected_answer = '####  \n#X #  \n#  ###\n#   X#\n#   X#\n#XX###\n####  '
+    expected_answer = '####  \n#X #  \n#  ###\n#  X# \n#   X#\n#XX###\n####  '
     answer = taboo_cells(wh)
     fcn = test_taboo_cells    
     print('<<  Testing {} >>'.format(fcn.__name__))
@@ -149,5 +149,5 @@ if __name__ == "__main__":
     test_taboo_cells() 
 #    test_check_elem_action_seq()
 #    test_solve_sokoban_elem()
-#    test_can_go_there()
+    test_can_go_there()
 #   test_solve_sokoban_macro()   

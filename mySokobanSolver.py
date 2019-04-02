@@ -117,8 +117,7 @@ def taboo_cells(warehouse):
                     if warehouse_2d[y][x] not in targetSquares:
                         if warehouse_2d[y][x] != wall:
                             if check_corner_square(warehouse_2d, x, y):
-                                if can_go_there(warehouse, (x,y)):
-                                    warehouse_2d[y][x] = taboo
+                                warehouse_2d[y][x] = taboo
         return warehouse_2d
         
         
@@ -136,14 +135,23 @@ def taboo_cells(warehouse):
                             break 
                         
                         if currentRow[nextSquare] == taboo and check_corner_square(warehouse_2d, x + nextSquare + 1, y):
-                            if all([check_corner_square(warehouse_2d, nextNextSquare, y, 1) 
-                                    for nextNextSquare in range(x+1, nextSquare + nextNextSquare + 1)]):
-                                for edgeSquares in range(x+1, nextSquare + nextNextSquare + 1):
+                            if all([check_corner_square(warehouse_2d, nextNextSquare, y, 1)
+                                    for nextNextSquare in range(x+1, nextSquare + x + 1)]):
+                                for edgeSquares in range(x+1, nextSquare + x + 1):
                                     warehouse_2d[y][edgeSquares] = taboo
-        #return warehouse_2d
                     # to check up and down
                     # To be added
-    warehouse_2d = rule1(warehouse_2d) #Tested working
+                    for nextSquareY in range(len(currentColumn)):
+                        if currentColumn[nextSquareY] in targetSquares or currentColumn[nextSquareY] == wall:
+                            break
+                        if currentColumn[nextSquareY] == taboo and check_corner_square(warehouse_2d, x, y2 + y + 1):
+                            if all([check_corner_square(warehouse_2d, x, nextNextSquareY, 1)
+                                    for nextNextSquareY in range(y + 1, nextSquareY + y + 1)]):
+                                for edgeSquaresY in range(y + 1, nextSquareY + nextNextSquareY + 1):
+                                    warehouse_2d[edgeSquaresY][x] = taboo
+        return warehouse_2d
+                    
+    warehouse_2d = rule2(rule1(warehouse_2d)) #Tested working
     
     #Convert 2D array back into string
     warehouse_taboo = '\n'.join([''.join(line) for line in warehouse_2d])
@@ -301,6 +309,7 @@ class CanGoThereProblem(search.Problem):
         return (state[0] + action[0], state[1] + action[1])
     
     
+    
 def can_go_there(warehouse, dst):
     '''    
     Determine whether the worker can walk to the cell dst=(row,column) 
@@ -352,14 +361,12 @@ def solve_sokoban_macro(warehouse):
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 
-''' TESTING OF FUNCTION DIRECTLY ON THIS FILE CAN DELETE AFTER
-wh = Warehouse()
-t0 = time.time()
-wh.load_warehouse("warehouses/warehouse_203.txt")
-taboo_Check = taboo_cells(wh)
-
-t1 = time.time()
-
-print ("Solver took ",t1-t0, ' seconds')
-
-'''
+# TESTING OF FUNCTION DIRECTLY ON THIS FILE CAN DELETE AFTER
+#wh = Warehouse()
+#t0 = time.time()
+#wh.load_warehouse("warehouses/warehouse_01.txt")
+#taboo_Check = taboo_cells(wh)
+#
+#t1 = time.time()
+#
+#print ("Solver took ",t1-t0, ' seconds')
