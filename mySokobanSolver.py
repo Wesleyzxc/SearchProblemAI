@@ -144,10 +144,11 @@ def taboo_cells(warehouse):
                     for nextSquareY in range(len(currentColumn)):
                         if currentColumn[nextSquareY] in targetSquares or currentColumn[nextSquareY] == wall:
                             break
-                        if currentColumn[nextSquareY] == taboo and check_corner_square(warehouse_2d, x, y2 + y + 1):
+                        
+                        if currentColumn[nextSquareY] == taboo and check_corner_square(warehouse_2d, x, nextSquareY + y + 1):
                             if all([check_corner_square(warehouse_2d, x, nextNextSquareY, 1)
                                     for nextNextSquareY in range(y + 1, nextSquareY + y + 1)]):
-                                for edgeSquaresY in range(y + 1, nextSquareY + nextNextSquareY + 1):
+                                for edgeSquaresY in range(y + 1, nextSquareY + y + 1):
                                     warehouse_2d[edgeSquaresY][x] = taboo
         return warehouse_2d
                     
@@ -201,17 +202,26 @@ class SokobanPuzzle(search.Problem):
     #     Note that you will need to add several functions to 
     #     complete this class. For example, a 'result' function is needed
     #     to satisfy the interface of 'search.Problem'.
-#    self.allow_taboo_push = False
-#    self.macro = False
-
+    
+    
     
     def __init__(self, warehouse, allow_taboo_push, macro):
         if allow_taboo_push is None:
             self.allow_taboo_push = True
         if macro is None:
             self.macro = True
+        
 
     def actions(self, state):
+        validActions = []
+        actionDict = {'Up':(0,-1), 'Down':(0,1), 'Left':(-1,0), 'Right':(1,0)}
+        for names, coords in actionDict.items():
+            resultX = state.worker[0] + coords[0]
+            resultY = state.worker[1] + coords[1]
+            if (can_go_there(state, (resultY,resultX))):
+                validActions.append(names)
+        return validActions
+            
         """
         Return the list of actions that can be executed in the given state.
         
@@ -257,9 +267,8 @@ def check_action_seq(warehouse, action_seq):
     '''
     
     ##         "INSERT YOUR CODE HERE"
-    
-    raise NotImplementedError()
-
+    actionDict = {'Up':(0,-1), 'Down':(0,1), 'Left':(-1,0), 'Right':(1,0)}
+    print(actionDict)
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -362,10 +371,13 @@ def solve_sokoban_macro(warehouse):
 
 
 # TESTING OF FUNCTION DIRECTLY ON THIS FILE CAN DELETE AFTER
-#wh = Warehouse()
+wh = Warehouse()
+wh.load_warehouse("warehouses/warehouse_01.txt")
+#puzzle = SokobanPuzzle(wh, None, None)
+#
+#x = puzzle.actions(wh)
 #t0 = time.time()
-#wh.load_warehouse("warehouses/warehouse_01.txt")
-#taboo_Check = taboo_cells(wh)
+taboo_Check = taboo_cells(wh)
 #
 #t1 = time.time()
 #

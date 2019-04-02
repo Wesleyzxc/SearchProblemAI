@@ -38,50 +38,6 @@ def is_corner_cell(warehouse, x, y, wall=0):
         return (num_ud_walls >= 1) or (num_lr_walls >= 1)
     else:
         return (num_ud_walls >= 1) and (num_lr_walls >= 1)
-''' function to find length of the wall so we can alternate inside outside'''
-def wallLength(row, startX = 0):
-    testnum = 0
-    for x in row[startX:]:
-        #print(x)
-        print(row[row.index(x)+1])
-        if (x == '#' and row[row.index(x)+1] == '#'):
-            testnum = testnum + 1
-        elif x == " " and row.index(x) != startX:
-            return testnum
-    return testnum
-            
-''' ray tracing function '''
-def checkInside(warehouse):
-    newArray = []
-    for i in range(len(warehouse)):
-        newArray.append([])
-        
-    for y in range(len(warehouse)):
-        inside = False
-        for x in range(len(warehouse[0])):
-            newVal = warehouse[y][x]
-            """ ignoring first and last row 
-            of warehouse to be considered
-            then becomes inside once it reaches wall"""
-            if all([cell == ' ' for cell in warehouse[y][x:]]): # whole row empty, means outside warehouse
-                    break
-                
-            if x != len(warehouse[0])-1:
-                if warehouse[y][x] == '#' and warehouse[y][x+1] == ' ':
-                    inside = not inside
-#            if x != len(warehouse[0])-1: 
-#                if (not inside and (y != 0)  and  y != len(warehouse)-1) and x != len(warehouse[0])-1:
-#                    if warehouse[y][x] == '#' and warehouse[y][x+1] == ' ':
-#                        inside = not inside
-                if warehouse[y][x] == " " and inside == True:
-                    newVal = "I"
-            else:
-                if all([cell == ' ' for cell in warehouse[y][x:]]): # whole row empty, means outside warehouse
-                    break
-#            if x == "#" and oldX != x:
-#                inside = not inside
-            newArray[y].insert(x, newVal)
-    return newArray
 
 def rule1(warehouse_2d):
         for y in range(len(warehouse_2d) - 1):
@@ -182,13 +138,39 @@ def can_go_there(warehouse, dst):
                        heuristic)
     return node is not None
     
-taboo_Check = rule2((rule1(warehouse_2d)))
+def check_action_seq(warehouse, action_seq):
+    '''
+    
+    Determine if the sequence of actions listed in 'action_seq' is legal or not.
+    
+    Important notes:
+      - a legal sequence of actions does not necessarily solve the puzzle.
+      - an action is legal even if it pushes a box onto a taboo cell.
+        
+    @param warehouse: a valid Warehouse object
 
+    @param action_seq: a sequence of legal actions.
+           For example, ['Left', 'Down', Down','Right', 'Up', 'Down']
+           
+    @return
+        The string 'Failure', if one of the action was not successul.
+           For example, if the agent tries to push two boxes at the same time,
+                        or push one box into a wall.
+        Otherwise, if all actions were successful, return                 
+               A string representing the state of the puzzle after applying
+               the sequence of actions.  This must be the same string as the
+               string returned by the method  Warehouse.__str__()
+    '''
+    
+    ##         "INSERT YOUR CODE HERE"
+    actionDict = {'Down':(0,-1), 'Up':(0,1), 'Left':(-1,0), 'Right':(1,0)}
+    print(actionDict)
+
+
+
+taboo_Check = rule2((rule1(warehouse_2d)))
 warehouse_str = '\n'.join([''.join(line) for line in taboo_Check])
 
 # remove the remaining target_squares
 for char in target_squares:
     warehouse_str = warehouse_str.replace(char, ' ')
-
-testrow = ['#', '#', '#', ' ', ' ', '#', '#']
-wallLength(testrow, 3)
