@@ -100,8 +100,6 @@ def taboo_cells(warehouse):
     def rule1(warehouse_2d):
         for y in range(len(warehouse_2d) - 1):
             inside = False
-            #Top wall test
-            #Left wall test
             for x in range(len(warehouse_2d[0]) - 1):
                 # inside when loop hits the first wall
                 
@@ -126,7 +124,8 @@ def taboo_cells(warehouse):
             for x in range(1, len(warehouse_2d[0]) - 1):
                 if warehouse_2d[y][x] == taboo and check_corner_square(warehouse_2d, x, y):
                     currentRow = warehouse_2d[y][x+1:]
-                    currentColumn = [eachRow[x] for eachRow in warehouse_2d[y + 1:][:]]
+                    currentColumn = [eachRow[x] for eachRow in warehouse_2d[y + 1:]]
+                
                     
                     # to check across left to right
                     for nextSquare in range(len(currentRow)):
@@ -209,17 +208,44 @@ class SokobanPuzzle(search.Problem):
             self.allow_taboo_push = True
         if macro is None:
             self.macro = True
+        if (not self.allow_taboo_push):
+            taboo_str = taboo_cells(warehouse)
+            self.taboo = [list(row) for row in taboo_str.split('\n')]
+    
+    def is_box(resultX,resultY):
+        return ((resultX, resultY) in warehouse.boxes)
+    
+    def is_box_taboo(self,resultX,resultY,coordX,coordY):
+        boxResultX = resultX + coordX
+        boxResultY = resultY + coordY
+        return (self.taboo[boxResultY][boxResultX] == "X")
         
-
     def actions(self, state):
         validActions = []
         actionDict = {'Up':(0,-1), 'Down':(0,1), 'Left':(-1,0), 'Right':(1,0)}
-        for names, coords in actionDict.items():
-            resultX = state.worker[0] + coords[0]
-            resultY = state.worker[1] + coords[1]
-            if (can_go_there(state, (resultY,resultX))):
-                validActions.append(names)
+        
+        if (self.allow_taboo_push):
+            for names, coords in actionDict.items():
+                resultX = state.worker[0] + coords[0]
+                resultY = state.worker[1] + coords[1]
+                if (can_go_there(state, (resultY,resultX))): #going to empty space is valid action
+                    validActions.append(names)
+                elif (is_box(resultX,resultY)): #pushing box is valid action
+                    validActions.append(names)
+        else:
+            for names, coords in actionDict.items():
+                resultX = state.worker[0] + coords[0]
+                resultY = state.worker[1] + coords[1]
+                ##is_taboo = (taboo_str[y][])
+                if (is_box(resultX,resultY)):
+                    if (not is_box_taboo(resultX,resultY,coords[0],coords[1])):
+                        validActions.append(names)
+                elif (can_go_there(state, (resultY,resultX))):
+                    validActions.append(names)
+                    
         return validActions
+    
+    #def result(self, state, action):
             
         """
         Return the list of actions that can be executed in the given state.
@@ -228,16 +254,6 @@ class SokobanPuzzle(search.Problem):
         'self.allow_taboo_push' and 'self.macro' should be tested to determine
         what type of list of actions is to be returned.
         """
-#        if self.allow_taboo_push is True:
-#            if self.macro is True:
-#                #("taboo+macro")
-#            else:
-#                #("taboo+element")
-#        else:
-#            if self.macro is True:
-#                #("macro")
-#            else:
-#                #("element")
         
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -275,7 +291,11 @@ def check_action_seq(warehouse, action_seq):
             resultX = currentPos[0] + actionDict.get(actions)[0]
             resultY = currentPos[1] + actionDict.get(actions)[1]
              
-            if (resultX, resultY) in warehouse.walls:
+            if (resultX, resultY) in warehouse.walls: 
+                 #NOT OPTIMISED - loops through walls everytime.
+                 #Alternative - load warehouse_2d once,  if (warehouse_2d(resultX,resultY) == "#")
+                 
+                 
                  # cannot move there since it's a wall
                 return failedSeq
             
@@ -286,6 +306,9 @@ def check_action_seq(warehouse, action_seq):
                  
                 # if moved box is wall/ another box
                 if (boxResultX, boxResultY) in warehouse.walls or (boxResultX,boxResultY) in warehouse.boxes:
+                    #NOT OPTIMISED - loops through walls everytime.
+                    #Alternative - load warehouse_2d once,  if (warehouse_2d(resultX,resultY) == "#")
+                    
                     return failedSeq
                  
                 # successful, commit changes to coords
@@ -410,8 +433,10 @@ wh.load_warehouse("warehouses/warehouse_01.txt")
 #puzzle = SokobanPuzzle(wh, None, None)
 #
 
+
+taboo_cells(wh)
 #t0 = time.time()
-test_checkaction = check_action_seq(wh, ['Up', 'Left', 'Up'])
+#test_checkaction = check_action_seq(wh, ['Up', 'Left', 'Up'])
 #
 #t1 = time.time()
 #
