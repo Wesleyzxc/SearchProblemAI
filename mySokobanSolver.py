@@ -140,7 +140,6 @@ def taboo_cells(warehouse):
                                 for edgeSquares in range(x+1, nextSquare + x + 1):
                                     warehouse_2d[y][edgeSquares] = taboo
                     # to check up and down
-                    # To be added
                     for nextSquareY in range(len(currentColumn)):
                         if currentColumn[nextSquareY] in targetSquares or currentColumn[nextSquareY] == wall:
                             break
@@ -265,10 +264,45 @@ def check_action_seq(warehouse, action_seq):
                the sequence of actions.  This must be the same string as the
                string returned by the method  Warehouse.__str__()
     '''
-    
+    failedSeq = 'Failure'
     ##         "INSERT YOUR CODE HERE"
     actionDict = {'Up':(0,-1), 'Down':(0,1), 'Left':(-1,0), 'Right':(1,0)}
-    print(actionDict)
+    
+    for actions in action_seq:
+        currentPos = warehouse.worker
+        if actions in actionDict.keys():
+            # coords of worker after actions
+            resultX = currentPos[0] + actionDict.get(actions)[0]
+            resultY = currentPos[1] + actionDict.get(actions)[1]
+             
+            if (resultX, resultY) in warehouse.walls:
+                 # cannot move there since it's a wall
+                return failedSeq
+            
+            elif (resultX, resultY) in warehouse.boxes:
+                # coords of box after actions
+                boxResultX = resultX + actionDict.get(actions)[0] 
+                boxResultY = resultY + actionDict.get(actions)[1]
+                 
+                # if moved box is wall/ another box
+                if (boxResultX, boxResultY) in warehouse.walls or (boxResultX,boxResultY) in warehouse.boxes:
+                    return failedSeq
+                 
+                # successful, commit changes to coords
+                else:
+                    warehouse.boxes.remove(resultX, resultY)
+                    warehouse.boxes.append(boxResultX, boxResultY)
+                    warehouse.worker = (resultX, resultY)
+                    print(warehouse.worker) # CAN DELETE REMEMBER TO DELETE
+                     
+            else:
+                warehouse.worker = (resultX, resultY)
+                print(warehouse.worker) # CAN DELETE REMEMBER TO DELETE
+                
+    return str(warehouse)
+        
+
+            
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -375,9 +409,9 @@ wh = Warehouse()
 wh.load_warehouse("warehouses/warehouse_01.txt")
 #puzzle = SokobanPuzzle(wh, None, None)
 #
-#x = puzzle.actions(wh)
+
 #t0 = time.time()
-taboo_Check = taboo_cells(wh)
+test_checkaction = check_action_seq(wh, ['Up', 'Left', 'Up'])
 #
 #t1 = time.time()
 #
