@@ -203,7 +203,13 @@ class SokobanPuzzle(search.Problem):
     
     
     
-    def __init__(self, warehouse, allow_taboo_push, macro):
+    def __init__(self, warehouse, goal = None, allow_taboo_push = None, macro = None):
+        ## PLEASE CHECK GOAL SET
+        if goal == None:
+            warehouseCopy = warehouse.copy()
+            warehouseCopy.boxes = '*'
+            warehouseCopy.worker = ' '
+            goal = warehouseCopy
         if allow_taboo_push is None:
             self.allow_taboo_push = True
         if macro is None:
@@ -219,41 +225,70 @@ class SokobanPuzzle(search.Problem):
         boxResultX = resultX + coordX
         boxResultY = resultY + coordY
         return (self.taboo[boxResultY][boxResultX] == "X")
-        
-    def actions(self, state):
-        validActions = []
-        actionDict = {'Up':(0,-1), 'Down':(0,1), 'Left':(-1,0), 'Right':(1,0)}
-        
-        if (self.allow_taboo_push):
-            for names, coords in actionDict.items():
-                resultX = state.worker[0] + coords[0]
-                resultY = state.worker[1] + coords[1]
-                if (can_go_there(state, (resultY,resultX))): #going to empty space is valid action
-                    validActions.append(names)
-                elif (is_box(resultX,resultY)): #pushing box is valid action
-                    validActions.append(names)
-        else:
-            for names, coords in actionDict.items():
-                resultX = state.worker[0] + coords[0]
-                resultY = state.worker[1] + coords[1]
-                ##is_taboo = (taboo_str[y][])
-                if (is_box(resultX,resultY)):
-                    if (not is_box_taboo(resultX,resultY,coords[0],coords[1])):
-                        validActions.append(names)
-                elif (can_go_there(state, (resultY,resultX))):
-                    validActions.append(names)
-                    
-        return validActions
     
-    #def result(self, state, action):
-            
-        """
+    
+    """
         Return the list of actions that can be executed in the given state.
         
         As specified in the header comment of this class, the attributes
         'self.allow_taboo_push' and 'self.macro' should be tested to determine
         what type of list of actions is to be returned.
+        """        
+    actionDict = {'Up':(0,-1), 'Down':(0,1), 'Left':(-1,0), 'Right':(1,0)}
+    def actions(self, state):
+        validActions = []
+        
+        for names, coords in actionDict.items():
+            resultX = state.worker[0] + coords[0]
+            resultY = state.worker[1] + coords[1]
+        
+        if (self.allow_taboo_push):
+            if (can_go_there(state, (resultY,resultX))): #going to empty space is valid action
+                validActions.append(names)
+            elif (is_box(resultX,resultY)):
+                
+                boxResultX = resultX + actionDict.get(actions)[0] 
+                boxResultY = resultY + actionDict.get(actions)[1]
+                #check pushing box is valid action or if moved box is wall/ another box
+                if (boxResultX, boxResultY) not in warehouse.walls or (boxResultX,boxResultY) not in warehouse.boxes:
+                    validActions.append(names)
+                    
+        else: # allow taboo push is false
+            ##is_taboo = (taboo_str[y][])
+            if (is_box(resultX,resultY)):
+                if (not is_box_taboo(resultX,resultY,coords[0],coords[1])):
+                    validActions.append(names)
+            elif (can_go_there(state, (resultY,resultX))):
+                validActions.append(names)
+                
+        return validActions
+    
+    def result(self, state, action):
+        """Return the state that results from executing the given
+        action in the given state. The action must be one of
+        self.actions(state).
         """
+        if action in self.actions(state):
+            resultOfAction = (state.worker[0] + actionDict.get(actions)[0], state.worker[0] + actionDict.get(actions)[1])
+            #just move worker
+            if (resultOfAction == ' '):
+                state.worker = (state.worker[0] + actionDict.get(actions)[0], state.worker[0] + actionDict.get(actions)[1])
+                
+            elif (resultOfAction in state.boxes):
+                state.boxes.remove(resultOfAction) # remove from pos
+                state.worker = (state.worker[0] + actionDict.get(actions)[0], state.worker[0] + actionDict.get(actions)[1])
+                resultOfAction[0] += actionDict.get(actions)[0]
+                resultOfAction[1] += actionDict.get(actions)[1]
+                state.boxes.append(resultOfAction) # add new pos to box
+                
+        return 
+                                
+    
+                
+            
+            
+            
+        
         
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
