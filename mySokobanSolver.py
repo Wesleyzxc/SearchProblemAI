@@ -242,26 +242,33 @@ class SokobanPuzzle(search.Problem):
             resultX = state.worker[0] + coords[0]
             resultY = state.worker[1] + coords[1]
         
-        if (self.allow_taboo_push):
-            if (can_go_there(state, (resultY,resultX))): #going to empty space is valid action
-                validActions.append(names)
-            elif (is_box(resultX,resultY)):
-                
-                boxResultX = resultX + actionDict.get(actions)[0] 
-                boxResultY = resultY + actionDict.get(actions)[1]
-                #check pushing box is valid action or if moved box is wall/ another box
-                if (boxResultX, boxResultY) not in warehouse.walls or (boxResultX,boxResultY) not in warehouse.boxes:
-                    validActions.append(names)
+            if (self.allow_taboo_push):
+                if (can_go_there(state, (resultY,resultX))): #going to empty space is valid action
+                    if (not self.macro):
+                        validActions.append(names) #elem
+                elif (is_box(resultX,resultY)):
                     
-        else: # allow taboo push is false
-            ##is_taboo = (taboo_str[y][])
-            if (is_box(resultX,resultY)):
-                if (not is_box_taboo(resultX,resultY,coords[0],coords[1])):
-                    validActions.append(names)
-            elif (can_go_there(state, (resultY,resultX))):
-                validActions.append(names)
-                
-        return validActions
+                    boxResultX = resultX + actionDict.get(actions)[0] 
+                    boxResultY = resultY + actionDict.get(actions)[1]
+                    #check pushing box is valid action or if moved box is wall/ another box
+                    if (boxResultX, boxResultY) not in warehouse.walls or (boxResultX,boxResultY) not in warehouse.boxes:
+                        if (not self.macro):
+                            validActions.append(names)
+                        else:
+                            validActions.append((resultX,resultY), names) #macro
+                        
+            else: # allow taboo push is false
+                if (is_box(resultX,resultY)):
+                    if (not is_box_taboo(resultX,resultY,coords[0],coords[1])):
+                        if (not self.macro):
+                            validActions.append(names) #elem
+                        else:
+                            validActions.append((resultX,resultY), names) #macro
+                elif (can_go_there(state, (resultY,resultX))):
+                    if (not self.macro):
+                        validActions.append(names)#elem                  
+            return validActions
+    
     
     def result(self, state, action):
         """Return the state that results from executing the given
@@ -379,7 +386,13 @@ def solve_sokoban_elem(warehouse):
             If the puzzle is already in a goal state, simply return []
     '''
     
-    ##         "INSERT YOUR CODE HERE"
+    #Goal state
+    warehouseStr = str(warehouse)
+    goal_state = warehouseStr.replace("$", " ").replace(".", "*")
+    
+    
+    # which heuristic?
+    # which algorithm?
     
     raise NotImplementedError()
 
@@ -425,7 +438,7 @@ def can_go_there(warehouse, dst):
     
     def heuristic(GoThereProblem):
         state = GoThereProblem.state
-        # distance = sqrt(xdist^2 + ydist^2). Basic distance formula heuristic.
+        # distance = sqrt(xdist^2 + ydist^2). pythagoras theorem
         return math.sqrt((math.pow(state[1] - dst[1], 2)) + (math.pow(state[0] - dst[0], 2)))
 
     dst = (dst[1], dst[0]) # flip it
@@ -454,9 +467,13 @@ def solve_sokoban_macro(warehouse):
         Otherwise return M a sequence of macro actions that solves the puzzle.
         If the puzzle is already in a goal state, simply return []
     '''
+    #Goal state
+    warehouseStr = str(warehouse)
+    goal_state = warehouseStr.replace("$", " ").replace(".", "*")
     
-    ##         "INSERT YOUR CODE HERE"
     
+    # which heuristic?
+    # which algorithm?
     raise NotImplementedError()
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
