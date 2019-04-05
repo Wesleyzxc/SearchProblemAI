@@ -226,6 +226,8 @@ class SokobanPuzzle(search.Problem):
         boxResultY = resultY + coordY
         return (self.taboo[boxResultY][boxResultX] == "X")
     
+    def can_push_box_to(self, boxResultX, boxResultY ):
+        return ((boxResultX, boxResultY) not in warehouse.walls or (boxResultX,boxResultY) not in warehouse.boxes)
     
     """
         Return the list of actions that can be executed in the given state.
@@ -238,37 +240,37 @@ class SokobanPuzzle(search.Problem):
     def actions(self, state):
         validActions = []
         
-        for names, coords in actionDict.items():
-            resultX = state.worker[0] + coords[0]
-            resultY = state.worker[1] + coords[1]
-        
+        if (not self.macro):
+            for names, coords in actionDict.items():
+                resultX = state.worker[0] + coords[0]
+                resultY = state.worker[1] + coords[1]
+            
             if (self.allow_taboo_push):
                 if (can_go_there(state, (resultY,resultX))): #going to empty space is valid action
-                    if (not self.macro):
-                        validActions.append(names) #elem
+                    validActions.append(names)
                 elif (is_box(resultX,resultY)):
                     
                     boxResultX = resultX + actionDict.get(actions)[0] 
                     boxResultY = resultY + actionDict.get(actions)[1]
-                    #check pushing box is valid action or if moved box is wall/ another box
-                    if (boxResultX, boxResultY) not in warehouse.walls or (boxResultX,boxResultY) not in warehouse.boxes:
-                        if (not self.macro):
-                            validActions.append(names)
-                        else:
-                            validActions.append((resultX,resultY), names) #macro
+                    if (can_push_box_to(boxResultX, boxResultY)):
+                        validActions.append(names)
                         
             else: # allow taboo push is false
+                ##is_taboo = (taboo_str[y][])
                 if (is_box(resultX,resultY)):
                     if (not is_box_taboo(resultX,resultY,coords[0],coords[1])):
-                        if (not self.macro):
-                            validActions.append(names) #elem
-                        else:
-                            validActions.append((resultX,resultY), names) #macro
+                        validActions.append(names)
                 elif (can_go_there(state, (resultY,resultX))):
-                    if (not self.macro):
-                        validActions.append(names)#elem                  
+                    validActions.append(names)
+        else: #macro        
+            for box in warehouse.boxes():
+                for names, coords in actionDict, items():
+                    if (can_go_there(state, (box[0] - coords[0], box[1] - coords[1]))): #worker coord to push box
+                        if (can_push_box(box[0] + coords[0], box[1] + coords[1])): #final coord of box
+                            validActions.append((box[0],box[1]), names)
+                    
+                    
             return validActions
-    
     
     def result(self, state, action):
         """Return the state that results from executing the given
@@ -386,13 +388,7 @@ def solve_sokoban_elem(warehouse):
             If the puzzle is already in a goal state, simply return []
     '''
     
-    #Goal state
-    warehouseStr = str(warehouse)
-    goal_state = warehouseStr.replace("$", " ").replace(".", "*")
-    
-    
-    # which heuristic?
-    # which algorithm?
+    ##         "INSERT YOUR CODE HERE"
     
     raise NotImplementedError()
 
@@ -438,7 +434,7 @@ def can_go_there(warehouse, dst):
     
     def heuristic(GoThereProblem):
         state = GoThereProblem.state
-        # distance = sqrt(xdist^2 + ydist^2). pythagoras theorem
+        # distance = sqrt(xdist^2 + ydist^2). Basic distance formula heuristic.
         return math.sqrt((math.pow(state[1] - dst[1], 2)) + (math.pow(state[0] - dst[0], 2)))
 
     dst = (dst[1], dst[0]) # flip it
@@ -467,13 +463,9 @@ def solve_sokoban_macro(warehouse):
         Otherwise return M a sequence of macro actions that solves the puzzle.
         If the puzzle is already in a goal state, simply return []
     '''
-    #Goal state
-    warehouseStr = str(warehouse)
-    goal_state = warehouseStr.replace("$", " ").replace(".", "*")
     
+    ##         "INSERT YOUR CODE HERE"
     
-    # which heuristic?
-    # which algorithm?
     raise NotImplementedError()
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
