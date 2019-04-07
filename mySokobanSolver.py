@@ -208,17 +208,20 @@ class SokobanPuzzle(search.Problem):
         ## PLEASE CHECK GOAL SET
         self.warehouse = warehouse
         if initial == None:
-            self.initial = str(warehouse)
+            self.initial = warehouse
             
         if goal == None:
-            self.goal = str(warehouse).replace("$", " ")
-            self.goal = self.goal.replace(".", "*")
-            self.goal = self.goal.replace("@", " ")
+            self.goal = str(warehouse.copy(None, warehouse.targets))
             
         if allow_taboo_push is None:
             self.allow_taboo_push = False
+        else:
+            self.allow_taboo_push = allow_taboo_push
         if macro is None:
             self.macro = False
+        else:
+            self.macro = macro
+        
         taboo_str = taboo_cells(warehouse)
         self.taboo = [list(row) for row in taboo_str.split('\n')]
     
@@ -241,10 +244,12 @@ class SokobanPuzzle(search.Problem):
         what type of list of actions is to be returned.
         """        
     
+    def goal_test(self, state):
+        return str(state).replace("@", " ") == self.goal
     
     def actions(self, state):
         validActions = []
-        
+        macroActions = []
         if (not self.macro):
             
             for names, coords in actionDict.items():
@@ -272,14 +277,18 @@ class SokobanPuzzle(search.Problem):
                     
 
         else: #macro  
-            for box in self.warehouse.boxes():
+            for box in self.warehouse.boxes:
                 for names, coords in actionDict.items():
                     if (can_go_there(state, (box[0] - coords[0], box[1] - coords[1]))): #worker coord to push box
                         if (self.can_push_box_to(box[0] + coords[0], box[1] + coords[1])): #final coord of box
-                            validActions.append((box[0],box[1]), names)
+                            macroActions.append((box, names))
+                            
                     
                     
-        return validActions
+        if self.macro:
+            return macroActions
+        else:
+            return validActions
     
     def result(self, state, action):
         """Return the state that results from executing the given
@@ -287,8 +296,8 @@ class SokobanPuzzle(search.Problem):
         self.actions(state).
         """
         x = self.actions(state)
-        if action in x:
-            resultOfAction = (state.worker[0] + actionDict.get(action)[0], state.worker[1] + actionDict.get(action)[1])
+        if action in x and not self.macro:
+            resultOfAction = (state.worker[0] + actionDict[action][0], state.worker[1] + actionDict[action][1])
             stateStr = str(state)
             state_2d = [list(row) for row in stateStr.split('\n')] # state_2d is y,x
             #just move worker
@@ -306,6 +315,12 @@ class SokobanPuzzle(search.Problem):
                 state.boxes.append(resultOfAction) # add new pos to box
                 return state
             
+        if action in x and self.macro:
+            state.worker = (action[0][0], action[0][1])
+            state.boxes.remove(action[0])
+            state.boxes.append((action[0][0] + actionDict[action[1]][0], action[0][1] + actionDict[action[1]][1]))
+            
+            return state
         
         
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -394,9 +409,14 @@ def solve_sokoban_elem(warehouse):
             If the puzzle is already in a goal state, simply return []
     '''
     
+    goal = str(warehouse).replace("$", " ").replace(".", "*")
+    x = depth_first_graph_search(SokobanPuzzle(warehouse, None, None, True, False))
     ##         "INSERT YOUR CODE HERE"
+    if x is None:
+        return ['Impossible']
     
-    raise NotImplementedError()
+    for node in x.path()[1:]:
+        print(node)
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 class CanGoThereProblem(search.Problem):
@@ -469,6 +489,14 @@ def solve_sokoban_macro(warehouse):
         Otherwise return M a sequence of macro actions that solves the puzzle.
         If the puzzle is already in a goal state, simply return []
     '''
+    goal = str(warehouse).replace("$", " ").replace(".", "*")
+#     Using definition of Manhattan distance
+    x = depth_first_graph_search(SokobanPuzzle(warehouse, None , None, False, True))
+    if x is None:
+        return 'Impossible'
+    macro_actions = x.path()
+    print (macro_actions, x.boxes)
+        
     
 
 
@@ -478,12 +506,13 @@ def solve_sokoban_macro(warehouse):
 # TESTING OF FUNCTION DIRECTLY ON THIS FILE CAN DELETE AFTER
 wh = Warehouse()
 wh.load_warehouse("warehouses/warehouse_01.txt")
-puzzle = SokobanPuzzle(wh)
-abc = puzzle.result(puzzle.warehouse, 'Up')
-#
-#t0 = time.time()
-#test_checkaction = check_action_seq(wh, ['Up', 'Left', 'Up'])
-#
-#t1 = time.time()
-#
-#print ("Solver took ",t1-t0, ' seconds')
+puzzle = SokobanPuzzle(wh, None, None, False, True)
+#SokobanPuzzle()
+#abc = puzzle.result(puzzle.warehouse, 'Up')
+#abc = puzzle.result(puzzle.warehouse, (((3, 4), 'Left')))
+
+#print(abc)
+t0 = time.time()
+solve_sokoban_elem(wh)
+t1 = time.time()
+print ("Solver took ",t1-t0, ' seconds')
