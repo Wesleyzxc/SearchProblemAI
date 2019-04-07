@@ -106,7 +106,6 @@ def taboo_cells(warehouse):
                 if not inside:
                     if warehouse_2d[y][x] == wall:
                         inside = True
-                        #print("Inside") #working correctly
                 else:
                     # check if cell from x:end is empty
                     if all([cell == ' ' for cell in warehouse_2d[y][x:]]):
@@ -273,7 +272,6 @@ class SokobanPuzzle(search.Problem):
                     
 
         else: #macro  
-            print (self.warehouse.boxes())
             for box in self.warehouse.boxes():
                 for names, coords in actionDict.items():
                     if (can_go_there(state, (box[0] - coords[0], box[1] - coords[1]))): #worker coord to push box
@@ -336,7 +334,6 @@ def check_action_seq(warehouse, action_seq):
                string returned by the method  Warehouse.__str__()
     '''
     failedSeq = 'Failure'
-    ##         "INSERT YOUR CODE HERE"
     actionDict = {'Up':(0,-1), 'Down':(0,1), 'Left':(-1,0), 'Right':(1,0)}
     
     for actions in action_seq:
@@ -371,11 +368,9 @@ def check_action_seq(warehouse, action_seq):
                     warehouse.boxes.remove(resultX, resultY)
                     warehouse.boxes.append(boxResultX, boxResultY)
                     warehouse.worker = (resultX, resultY)
-                    print(warehouse.worker) # CAN DELETE REMEMBER TO DELETE
                      
             else:
                 warehouse.worker = (resultX, resultY)
-                print(warehouse.worker) # CAN DELETE REMEMBER TO DELETE
                 
     return str(warehouse)
         
@@ -485,7 +480,6 @@ wh = Warehouse()
 wh.load_warehouse("warehouses/warehouse_01.txt")
 puzzle = SokobanPuzzle(wh)
 abc = puzzle.result(puzzle.warehouse, 'Up')
-print(abc)
 #
 #t0 = time.time()
 #test_checkaction = check_action_seq(wh, ['Up', 'Left', 'Up'])
