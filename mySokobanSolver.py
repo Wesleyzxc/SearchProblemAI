@@ -168,6 +168,245 @@ def taboo_cells(warehouse):
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 
+#class SokobanPuzzle(search.Problem):
+#    '''
+#    An instance of the class 'SokobanPuzzle' represents a Sokoban puzzle.
+#    An instance contains information about the walls, the targets, the boxes
+#    and the worker.
+#
+#    Your implementation should be fully compatible with the search functions of 
+#    the provided module 'search.py'. 
+#    
+#    Each instance should have at least the following attributes
+#    - self.allow_taboo_push
+#    - self.macro
+#    
+#    When self.allow_taboo_push is set to True, the 'actions' function should 
+#    return all possible legal moves including those that move a box on a taboo 
+#    cell. If self.allow_taboo_push is set to False, those moves should not be
+#    included in the returned list of actions.
+#    
+#    If self.macro is set True, the 'actions' function should return 
+#    macro actions. If self.macro is set False, the 'actions' function should 
+#    return elementary actions.
+#        
+#    '''
+#    #
+#    #         "INSERT YOUR CODE HERE"
+#    #
+#    #     Revisit the sliding puzzle and the pancake puzzle for inspiration!
+#    #
+#    #     Note that you will need to add several functions to 
+#    #     complete this class. For example, a 'result' function is needed
+#    #     to satisfy the interface of 'search.Problem'.
+#    
+#    
+#    global actionDict
+#    actionDict = {'Up':(0,-1), 'Down':(0,1), 'Left':(-1,0), 'Right':(1,0)}
+#    def __init__(self, warehouseObj, initial = None, goal = None, allow_taboo_push = None, macro = None):
+#        
+#        if initial == None:
+#            self.initial = str(warehouseObj)
+#        else:
+#            self.initial = initial
+#            
+#        if goal == None:
+#            self.goal = str(warehouseObj.copy(None, warehouseObj.targets))
+#        else:
+#            self.goal = goal
+#            
+#        if allow_taboo_push is None:
+#            self.allow_taboo_push = False
+#        else:
+#            self.allow_taboo_push = allow_taboo_push
+#        if macro is None:
+#            self.macro = False
+#        else:
+#            self.macro = macro
+#        
+#        taboo_str = taboo_cells(warehouseObj)
+#        self.taboo = [list(row) for row in taboo_str.split('\n')]
+#        
+#    
+#    
+#    
+#    
+#    """
+#        Return the list of actions that can be executed in the given state.
+#        
+#        As specified in the header comment of this class, the attributes
+#        'self.allow_taboo_push' and 'self.macro' should be tested to determine
+#        what type of list of actions is to be returned.
+#        """        
+#    
+##    def goal_test(self, state):
+##        return self.goal == state
+#    
+#    def actions(self, state):
+#        
+#        # Creating new warehouse to get positions of everything
+#        currentWarehouse = Warehouse()
+#        print(type(state))
+#        currentWarehouse.extract_locations(state.split(sep="\n"))
+#        
+#        # Helper functions
+#        def is_box(resultX,resultY):
+#            return ((resultX, resultY) in currentWarehouse.boxes)
+#        
+#        def is_box_taboo(resultX,resultY,coordX,coordY):
+#            boxResultX = resultX + coordX
+#            boxResultY = resultY + coordY
+#            return (self.taboo[boxResultY][boxResultX] == "X")
+#        
+#        def can_push_box_to(boxResultX, boxResultY ):   
+#            return ((boxResultX, boxResultY) not in currentWarehouse.walls and (boxResultX,boxResultY) not in currentWarehouse.boxes)
+#        
+#        validActions = []
+#        macroActions = []
+#        if (not self.macro):
+#            for names, coords in actionDict.items():
+#                resultX = currentWarehouse.worker[0] + coords[0]
+#                resultY = currentWarehouse.worker[1] + coords[1]
+#                
+#                if (self.allow_taboo_push):
+#                    
+#                    if (can_go_there(currentWarehouse, (resultY,resultX))): #going to empty space is valid action
+#                        validActions.append(names)
+#                    elif (is_box(resultX,resultY)):
+#                        boxResultX = resultX + actionDict.get(names)[0] 
+#                        boxResultY = resultY + actionDict.get(names)[1]
+#                        if (can_push_box_to(boxResultX, boxResultY)):
+#                            validActions.append(names)
+#                        
+#                else: # allow taboo push is false
+#                    if (can_go_there(currentWarehouse, (resultY,resultX))): #going to empty space is valid action
+#                        validActions.append(names)
+#                    elif (is_box(resultX,resultY)):
+#                        boxResultX = resultX + actionDict.get(names)[0] 
+#                        boxResultY = resultY + actionDict.get(names)[1]
+#                        if (can_push_box_to(boxResultX, boxResultY) and not is_box_taboo(resultX,resultY,coords[0],coords[1])):
+#                            validActions.append(names)
+#                    
+#
+#        else: #macro  
+#            for box in currentWarehouse.boxes:
+#                for names, coords in actionDict.items():
+#                    if (can_go_there(currentWarehouse, (box[0] - coords[0], box[1] - coords[1]))): #worker coord to push box
+#                        if (self.can_push_box_to(box[0] + coords[0], box[1] + coords[1])): #final coord of box
+#                            macroActions.append((box, names))
+#                            
+#                    
+#                    
+#        if self.macro:
+#            return macroActions
+#        else:
+#            print(validActions)
+#            return validActions
+#    
+#    def result(self, state, action):
+#        """Return the state that results from executing the given
+#        action in the given state. The action must be one of
+#        self.actions(state).
+#        """
+#        print(action)
+#        # Creating new warehouse to get positions of everything
+#        currentWarehouse = Warehouse()
+#        currentWarehouse.extract_locations(state.split(sep="\n"))
+#        
+#        if not self.macro:
+#            resultOfAction = (currentWarehouse.worker[0] + actionDict[action][0], currentWarehouse.worker[1] + actionDict[action][1])
+#            
+#            state_2d = [list(row) for row in state.split('\n')] # state_2d is y,x
+#            #just move worker
+#
+#            if (state_2d[resultOfAction[1]][resultOfAction[0]] == ' '):
+#                currentWarehouse.worker = (resultOfAction[0], resultOfAction[1])
+#                print(str(currentWarehouse))
+#                return str(currentWarehouse)
+#            
+#            elif (state_2d[resultOfAction[1]][resultOfAction[0]] in currentWarehouse.boxes):    
+#                
+#                currentWarehouse.boxes.remove(resultOfAction) # remove from pos
+#                currentWarehouse.worker = (currentWarehouse.worker[0] + actionDict.get(action)[0], currentWarehouse.worker[0] + actionDict.get(action)[1])
+#                resultOfAction[0] += actionDict.get(action)[0]
+#                resultOfAction[1] += actionDict.get(action)[1]
+#                currentWarehouse.boxes.append(resultOfAction) # add new pos to box
+#                return str(currentWarehouse)
+#            
+#        elif self.macro:
+#            currentWarehouse.worker = (action[0][0], action[0][1])
+#            currentWarehouse.boxes.remove(action[0])
+#            currentWarehouse.boxes.append((action[0][0] + actionDict[action[1]][0], action[0][1] + actionDict[action[1]][1]))
+#            return str(currentWarehouse)
+#        
+#        
+## - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+#
+#def check_action_seq(warehouse, action_seq):
+#    '''
+#    
+#    Determine if the sequence of actions listed in 'action_seq' is legal or not.
+#    
+#    Important notes:
+#      - a legal sequence of actions does not necessarily solve the puzzle.
+#      - an action is legal even if it pushes a box onto a taboo cell.
+#        
+#    @param warehouse: a valid Warehouse object
+#
+#    @param action_seq: a sequence of legal actions.
+#           For example, ['Left', 'Down', Down','Right', 'Up', 'Down']
+#           
+#    @return
+#        The string 'Failure', if one of the action was not successul.
+#           For example, if the agent tries to push two boxes at the same time,
+#                        or push one box into a wall.
+#        Otherwise, if all actions were successful, return                 
+#               A string representing the state of the puzzle after applying
+#               the sequence of actions.  This must be the same string as the
+#               string returned by the method  Warehouse.__str__()
+#    '''
+#    failedSeq = 'Failure'
+#    actionDict = {'Up':(0,-1), 'Down':(0,1), 'Left':(-1,0), 'Right':(1,0)}
+#    
+#    for actions in action_seq:
+#        currentPos = warehouse.worker
+#        if actions in actionDict.keys():
+#            # coords of worker after actions
+#            resultX = currentPos[0] + actionDict.get(actions)[0]
+#            resultY = currentPos[1] + actionDict.get(actions)[1]
+#             
+#            if (resultX, resultY) in warehouse.walls: 
+#                 #NOT OPTIMISED - loops through walls everytime.
+#                 #Alternative - load warehouse_2d once,  if (warehouse_2d(resultX,resultY) == "#")
+#                 
+#                 
+#                 # cannot move there since it's a wall
+#                return failedSeq
+#            
+#            elif (resultX, resultY) in warehouse.boxes:
+#                # coords of box after actions
+#                boxResultX = resultX + actionDict.get(actions)[0] 
+#                boxResultY = resultY + actionDict.get(actions)[1]
+#                 
+#                # if moved box is wall/ another box
+#                if (boxResultX, boxResultY) in warehouse.walls or (boxResultX,boxResultY) in warehouse.boxes:
+#                    #NOT OPTIMISED - loops through walls everytime.
+#                    #Alternative - load warehouse_2d once,  if (warehouse_2d(resultX,resultY) == "#")
+#                    
+#                    return failedSeq
+#                 
+#                # successful, commit changes to coords
+#                else:
+#                    warehouse.boxes.remove(resultX, resultY)
+#                    warehouse.boxes.append(boxResultX, boxResultY)
+#                    warehouse.worker = (resultX, resultY)
+#                     
+#            else:
+#                warehouse.worker = (resultX, resultY)
+#                
+#    return str(warehouse)
+    
+
 class SokobanPuzzle(search.Problem):
     '''
     An instance of the class 'SokobanPuzzle' represents a Sokoban puzzle.
@@ -189,7 +428,8 @@ class SokobanPuzzle(search.Problem):
     If self.macro is set True, the 'actions' function should return 
     macro actions. If self.macro is set False, the 'actions' function should 
     return elementary actions.
-        
+    
+    
     '''
     #
     #         "INSERT YOUR CODE HERE"
@@ -199,196 +439,20 @@ class SokobanPuzzle(search.Problem):
     #     Note that you will need to add several functions to 
     #     complete this class. For example, a 'result' function is needed
     #     to satisfy the interface of 'search.Problem'.
+
     
-    
-    global actionDict
-    actionDict = {'Up':(0,-1), 'Down':(0,1), 'Left':(-1,0), 'Right':(1,0)}
-    def __init__(self, warehouse, initial = None, goal = None, allow_taboo_push = None, macro = None):
-        
-        ## PLEASE CHECK GOAL SET
-        self.warehouse = warehouse
-        if initial == None:
-            self.initial = warehouse
-            
-        if goal == None:
-            self.goal = str(warehouse.copy(None, warehouse.targets))
-            
-        if allow_taboo_push is None:
-            self.allow_taboo_push = False
-        else:
-            self.allow_taboo_push = allow_taboo_push
-        if macro is None:
-            self.macro = False
-        else:
-            self.macro = macro
-        
-        taboo_str = taboo_cells(warehouse)
-        self.taboo = [list(row) for row in taboo_str.split('\n')]
-    
-    def is_box(self, resultX,resultY):
-        return ((resultX, resultY) in self.warehouse.boxes)
-    
-    def is_box_taboo(self,resultX,resultY,coordX,coordY):
-        boxResultX = resultX + coordX
-        boxResultY = resultY + coordY
-        return (self.taboo[boxResultY][boxResultX] == "X")
-    
-    def can_push_box_to(self, boxResultX, boxResultY ):
-        return ((boxResultX, boxResultY) not in self.warehouse.walls and (boxResultX,boxResultY) not in self.warehouse.boxes)
-    
-    """
+    def __init__(self, warehouse):
+        raise NotImplementedError()
+
+    def actions(self, state):
+        """
         Return the list of actions that can be executed in the given state.
         
         As specified in the header comment of this class, the attributes
         'self.allow_taboo_push' and 'self.macro' should be tested to determine
         what type of list of actions is to be returned.
-        """        
-    
-    def goal_test(self, state):
-        return str(state).replace("@", " ") == self.goal
-    
-    def actions(self, state):
-        validActions = []
-        macroActions = []
-        if (not self.macro):
-            
-            for names, coords in actionDict.items():
-                resultX = state.worker[0] + coords[0]
-                resultY = state.worker[1] + coords[1]
-                
-                if (self.allow_taboo_push):
-                    
-                    if (can_go_there(state, (resultY,resultX))): #going to empty space is valid action
-                        validActions.append(names)
-                    elif (self.is_box(resultX,resultY)):
-                        boxResultX = resultX + actionDict.get(names)[0] 
-                        boxResultY = resultY + actionDict.get(names)[1]
-                        if (self.can_push_box_to(boxResultX, boxResultY)):
-                            validActions.append(names)
-                        
-                else: # allow taboo push is false
-                    if (can_go_there(state, (resultY,resultX))): #going to empty space is valid action
-                        validActions.append(names)
-                    elif (self.is_box(resultX,resultY)):
-                        boxResultX = resultX + actionDict.get(names)[0] 
-                        boxResultY = resultY + actionDict.get(names)[1]
-                        if (self.can_push_box_to(boxResultX, boxResultY) and not self.is_box_taboo(resultX,resultY,coords[0],coords[1])):
-                            validActions.append(names)
-                    
-
-        else: #macro  
-            for box in self.warehouse.boxes:
-                for names, coords in actionDict.items():
-                    if (can_go_there(state, (box[0] - coords[0], box[1] - coords[1]))): #worker coord to push box
-                        if (self.can_push_box_to(box[0] + coords[0], box[1] + coords[1])): #final coord of box
-                            macroActions.append((box, names))
-                            
-                    
-                    
-        if self.macro:
-            return macroActions
-        else:
-            return validActions
-    
-    def result(self, state, action):
-        """Return the state that results from executing the given
-        action in the given state. The action must be one of
-        self.actions(state).
         """
-        x = self.actions(state)
-        if action in x and not self.macro:
-            resultOfAction = (state.worker[0] + actionDict[action][0], state.worker[1] + actionDict[action][1])
-            stateStr = str(state)
-            state_2d = [list(row) for row in stateStr.split('\n')] # state_2d is y,x
-            #just move worker
-
-            if (state_2d[resultOfAction[1]][resultOfAction[0]] == ' '):
-                state.worker = (resultOfAction[0], resultOfAction[1])
-                return state
-            
-            elif (state_2d[resultOfAction[1]][resultOfAction[0]] in state.boxes):    
-                
-                state.boxes.remove(resultOfAction) # remove from pos
-                state.worker = (state.worker[0] + actionDict.get(action)[0], state.worker[0] + actionDict.get(action)[1])
-                resultOfAction[0] += actionDict.get(action)[0]
-                resultOfAction[1] += actionDict.get(action)[1]
-                state.boxes.append(resultOfAction) # add new pos to box
-                return state
-            
-        if action in x and self.macro:
-            state.worker = (action[0][0], action[0][1])
-            state.boxes.remove(action[0])
-            state.boxes.append((action[0][0] + actionDict[action[1]][0], action[0][1] + actionDict[action[1]][1]))
-            
-            return state
-        
-        
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-def check_action_seq(warehouse, action_seq):
-    '''
-    
-    Determine if the sequence of actions listed in 'action_seq' is legal or not.
-    
-    Important notes:
-      - a legal sequence of actions does not necessarily solve the puzzle.
-      - an action is legal even if it pushes a box onto a taboo cell.
-        
-    @param warehouse: a valid Warehouse object
-
-    @param action_seq: a sequence of legal actions.
-           For example, ['Left', 'Down', Down','Right', 'Up', 'Down']
-           
-    @return
-        The string 'Failure', if one of the action was not successul.
-           For example, if the agent tries to push two boxes at the same time,
-                        or push one box into a wall.
-        Otherwise, if all actions were successful, return                 
-               A string representing the state of the puzzle after applying
-               the sequence of actions.  This must be the same string as the
-               string returned by the method  Warehouse.__str__()
-    '''
-    failedSeq = 'Failure'
-    actionDict = {'Up':(0,-1), 'Down':(0,1), 'Left':(-1,0), 'Right':(1,0)}
-    
-    for actions in action_seq:
-        currentPos = warehouse.worker
-        if actions in actionDict.keys():
-            # coords of worker after actions
-            resultX = currentPos[0] + actionDict.get(actions)[0]
-            resultY = currentPos[1] + actionDict.get(actions)[1]
-             
-            if (resultX, resultY) in warehouse.walls: 
-                 #NOT OPTIMISED - loops through walls everytime.
-                 #Alternative - load warehouse_2d once,  if (warehouse_2d(resultX,resultY) == "#")
-                 
-                 
-                 # cannot move there since it's a wall
-                return failedSeq
-            
-            elif (resultX, resultY) in warehouse.boxes:
-                # coords of box after actions
-                boxResultX = resultX + actionDict.get(actions)[0] 
-                boxResultY = resultY + actionDict.get(actions)[1]
-                 
-                # if moved box is wall/ another box
-                if (boxResultX, boxResultY) in warehouse.walls or (boxResultX,boxResultY) in warehouse.boxes:
-                    #NOT OPTIMISED - loops through walls everytime.
-                    #Alternative - load warehouse_2d once,  if (warehouse_2d(resultX,resultY) == "#")
-                    
-                    return failedSeq
-                 
-                # successful, commit changes to coords
-                else:
-                    warehouse.boxes.remove(resultX, resultY)
-                    warehouse.boxes.append(boxResultX, boxResultY)
-                    warehouse.worker = (resultX, resultY)
-                     
-            else:
-                warehouse.worker = (resultX, resultY)
-                
-    return str(warehouse)
-        
+        raise NotImplementedError
 
             
 
@@ -409,15 +473,10 @@ def solve_sokoban_elem(warehouse):
             If the puzzle is already in a goal state, simply return []
     '''
     
-    goal = str(warehouse).replace("$", " ").replace(".", "*")
-    x = depth_first_graph_search(SokobanPuzzle(warehouse, None, None, True, False))
-    ##         "INSERT YOUR CODE HERE"
-    if x is None:
-        return ['Impossible']
+    goal = str(warehouse.copy(None, warehouse.targets))
+    puzzle = SokobanPuzzle(warehouse, None, goal, None, None)
+    x = depth_first_graph_search(puzzle)
     
-    for node in x.path()[1:]:
-        print(node)
-
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 class CanGoThereProblem(search.Problem):
     
@@ -495,7 +554,6 @@ def solve_sokoban_macro(warehouse):
     if x is None:
         return 'Impossible'
     macro_actions = x.path()
-    print (macro_actions, x.boxes)
         
     
 
@@ -505,14 +563,12 @@ def solve_sokoban_macro(warehouse):
 
 # TESTING OF FUNCTION DIRECTLY ON THIS FILE CAN DELETE AFTER
 wh = Warehouse()
-wh.load_warehouse("warehouses/warehouse_01.txt")
-puzzle = SokobanPuzzle(wh, None, None, False, True)
-#SokobanPuzzle()
+wh.load_warehouse("warehouses/warehouse_03.txt")
+#puzzle = SokobanPuzzle(wh, None, None, False, True)
 #abc = puzzle.result(puzzle.warehouse, 'Up')
 #abc = puzzle.result(puzzle.warehouse, (((3, 4), 'Left')))
-
+x = solve_sokoban_elem(wh)
 #print(abc)
 t0 = time.time()
-solve_sokoban_elem(wh)
 t1 = time.time()
 print ("Solver took ",t1-t0, ' seconds')
