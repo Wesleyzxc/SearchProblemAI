@@ -440,9 +440,14 @@ class SokobanPuzzle(search.Problem):
     #     complete this class. For example, a 'result' function is needed
     #     to satisfy the interface of 'search.Problem'.
 
-    
-    def __init__(self, warehouse):
-        raise NotImplementedError()
+    global actionDict
+    actionDict = {'Up':(0,-1), 'Down':(0,1), 'Left':(-1,0), 'Right':(1,0)}
+    def __init__(self, warehouse, initial = None, macro = None, allow_taboo_push = None):
+        self.warehouse = warehouse
+        self.initial = str(warehouse)
+        self.macro = False
+        self.allow_taboo_push = True
+        self.taboo = [list(row) for row in taboo_cells(warehouse).split('\n')]
 
     def actions(self, state):
         """
@@ -452,10 +457,34 @@ class SokobanPuzzle(search.Problem):
         'self.allow_taboo_push' and 'self.macro' should be tested to determine
         what type of list of actions is to be returned.
         """
-        raise NotImplementedError
+        warehouseObject = Warehouse()
+        warehouseObject.extract_locations(state.split(sep='\n'))
+        validActions = []
+        macroActions = []
+        
+        if not self.macro:
+            for names, coords in actionDict.items():
+                # resulted coords from 1 single action
+                resultX = warehouseObject.worker[0] + coords[0]
+                resultY = warehouseObject.worker[1] + coords[1]
+                if (can_go_there(warehouseObject, (resultY, resultX))):
+                    
+                
+                if self.allow_taboo_push: # allow_taboo_push == true
+                    
+                
+                # allow_taboo_push == false
+                else:
+                    pass
+                    
+        
+            return state
 
+    def result(self, state):
+        return state
             
-
+    def goal_test(self, state):
+        return self.goal == state
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 def solve_sokoban_elem(warehouse):
@@ -564,10 +593,10 @@ def solve_sokoban_macro(warehouse):
 # TESTING OF FUNCTION DIRECTLY ON THIS FILE CAN DELETE AFTER
 wh = Warehouse()
 wh.load_warehouse("warehouses/warehouse_03.txt")
-#puzzle = SokobanPuzzle(wh, None, None, False, True)
+puzzle = SokobanPuzzle(wh)
 #abc = puzzle.result(puzzle.warehouse, 'Up')
 #abc = puzzle.result(puzzle.warehouse, (((3, 4), 'Left')))
-x = solve_sokoban_elem(wh)
+#x = solve_sokoban_elem(wh)
 #print(abc)
 t0 = time.time()
 t1 = time.time()
