@@ -305,7 +305,7 @@ class SokobanPuzzle(search.Problem):
 
           
     def goal_test(self, state):
-        return self.goal == state
+        return self.goal == state.replace("@", " ")
     
 ## - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -391,21 +391,21 @@ def solve_sokoban_elem(warehouse):
     '''
     
     initialStr = str(warehouse)
-    goalStr = str(warehouse).replace("$", " ").replace(".", "*")
+    goalStr = str(warehouse).replace("$", " ").replace(".", "*").replace("@", " ")
     puzzle = SokobanPuzzle(warehouse, initialStr, goalStr)
-    
     if puzzle.goal_test == True:
         return []
     
     else:
         x = breadth_first_graph_search(puzzle)
-
-    if x is None:
-        return 'Impossible'
-    
+        if x is None:
+            return ['Impossible']
+        
     actions = x.path()
     actions = [e.action for e in actions]
     print(actions[1:])
+    
+    return(actions[1:])
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 class CanGoThereProblem(search.Problem):
     
