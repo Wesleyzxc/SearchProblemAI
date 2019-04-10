@@ -270,10 +270,10 @@ class SokobanPuzzle(search.Problem):
                         if ((boxX, boxY) not in warehouseObject.boxes and (boxX, boxY) not in warehouseObject.walls):
                             # check taboo
                             if (self.allow_taboo_push): 
-                                macroActions.append((box, names))             
+                                macroActions.append(((box[1], box[0]), names))             
                             else:
                                 if ((boxX, boxY) not in self.taboo):
-                                    macroActions.append((box, names))
+                                    macroActions.append(((box[1], box[0]), names))
 
             return macroActions
 
@@ -281,6 +281,7 @@ class SokobanPuzzle(search.Problem):
         warehouseObject = Warehouse()
         warehouseObject.extract_locations(state.split(sep='\n'))
         if self.macro:
+            action = ((action[0][1], action[0][0]), action[1])
             playerPosX = action[0][0] + actionDict[action[1]][0]
             playerPosY = action[0][1] + actionDict[action[1]][1]
             
@@ -393,6 +394,14 @@ def solve_sokoban_elem(warehouse):
     initialStr = str(warehouse)
     goalStr = str(warehouse).replace("$", " ").replace(".", "*").replace("@", " ")
     puzzle = SokobanPuzzle(warehouse, initialStr, goalStr)
+    
+    def heuristic(n):
+        distance = []
+        for box in warehouse.boxes:
+            distance.append(abs(warehouse.worker[0] - box[0]) + abs(warehouse.worker[1] - box[1]))   
+        return min(distance)
+        
+    
     if puzzle.goal_test == True:
         return []
     
@@ -401,11 +410,13 @@ def solve_sokoban_elem(warehouse):
         if x is None:
             return ['Impossible']
         
-    actions = x.path()
-    actions = [e.action for e in actions]
-    print(actions[1:])
     
-    return(actions[1:])
+    nodes = x.path()
+    nodes = [eachNode.action for eachNode in nodes]
+    return(nodes[1:])
+    
+    
+    
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 class CanGoThereProblem(search.Problem):
     
@@ -417,7 +428,6 @@ class CanGoThereProblem(search.Problem):
     global actionDict
     actionDict = {'Up':(0,-1), 'Down':(0,1), 'Left':(-1,0), 'Right':(1,0)}
     
-    '''cost = 1 for all Daryl - pancake used astar but no value?'''
     def value(self, state):
         return 1 
     
@@ -478,15 +488,23 @@ def solve_sokoban_macro(warehouse):
         Otherwise return M a sequence of macro actions that solves the puzzle.
         If the puzzle is already in a goal state, simply return []
     '''
-    goal = str(warehouse).replace("$", " ").replace(".", "*")
-#     Using definition of Manhattan distance
-    x = depth_first_graph_search(SokobanPuzzle(warehouse, None , None, False, True))
-    if x is None:
-        return 'Impossible'
-#    print(x.action)
+    initialStr = str(warehouse)
+    goalStr = str(warehouse).replace("$", " ").replace(".", "*").replace("@", " ")
+    puzzle = SokobanPuzzle(warehouse, initialStr, goalStr, macro = True)
+    if puzzle.goal_test == True:
+        return []
+    
+    else:
+        x = breadth_first_graph_search(puzzle)
+        if x is None:
+            return ['Impossible']
+        
         
     
-
+    nodes = x.path()
+    nodes = [eachNode.action for eachNode in nodes]
+    return(nodes[1:])
+    
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -504,6 +522,6 @@ wh.extract_locations(puzzle_t1.split(sep='\n'))
 
 #print(abc)
 t0 = time.time()
-x = solve_sokoban_elem(wh)
+x = solve_sokoban_macro(wh)
 t1 = time.time()
 print ("Solver took ",t1-t0, ' seconds')
