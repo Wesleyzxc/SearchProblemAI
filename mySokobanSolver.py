@@ -1,21 +1,15 @@
-
 '''
-
     2019 CAB320 Sokoban assignment
-
 The functions and classes defined in this module will be called by a marker script. 
 You should complete the functions and classes according to their specified interfaces.
-
 You are not allowed to change the defined interfaces.
 That is, changing the formal parameters of a function will break the 
 interface and triggers to a fail for the test of your code.
  
 # by default does not allow push of boxes on taboo cells
 SokobanPuzzle.allow_taboo_push = False 
-
 # use elementary actions if self.macro == False
 SokobanPuzzle.macro = False 
-
 '''
 
 # you have to use the 'search.py' file provided
@@ -54,7 +48,6 @@ def taboo_cells(warehouse):
              wall are taboo if none of these cells is a target.
     
     @param warehouse: a Warehouse object
-
     @return
        A string representing the puzzle with only the wall cells marked with 
        an '#' and the taboo cells marked with an 'X'.  
@@ -172,7 +165,6 @@ class SokobanPuzzle(search.Problem):
     An instance of the class 'SokobanPuzzle' represents a Sokoban puzzle.
     An instance contains information about the walls, the targets, the boxes
     and the worker.
-
     Your implementation should be fully compatible with the search functions of 
     the provided module 'search.py'. 
     
@@ -204,7 +196,7 @@ class SokobanPuzzle(search.Problem):
     actionDict = {'Up':(0,-1), 'Down':(0,1), 'Left':(-1,0), 'Right':(1,0)}
     
     
-    def __init__(self, warehouse, initial = None, goal = None, macro = False, allow_taboo_push = True):
+    def __init__(self, warehouse, initial = None, goal = None, macro = False, allow_taboo_push = False):
         if initial == None:
             self.initial = str(warehouse)
         else:
@@ -237,7 +229,8 @@ class SokobanPuzzle(search.Problem):
                 resultX = warehouseObject.worker[0] + coords[0]
                 resultY = warehouseObject.worker[1] + coords[1]
                 
-                if (can_go_there(warehouseObject, (resultY, resultX))):
+                #optimised
+                if (resultX, resultY) not in warehouseObject.walls and (resultX, resultY) not in warehouseObject.boxes:
                     validActions.append(names)                   
                     
                 # result of action is a box square
@@ -262,18 +255,20 @@ class SokobanPuzzle(search.Problem):
                     workerX = box[0]-coords[0]
                     workerY = box[1]-coords[1]
                     
-                    # check can go there
-                    if (can_go_there(warehouseObject, (workerY, workerX))):
+                    # optimised
+                    if (workerX, workerY) not in warehouseObject.walls and (workerX, workerY) not in warehouseObject.boxes:
+                        # can push box
                         boxX = box[0] + coords[0]
                         boxY = box[1] + coords[1]
-                        # can push box
                         if ((boxX, boxY) not in warehouseObject.boxes and (boxX, boxY) not in warehouseObject.walls):
-                            # check taboo
-                            if (self.allow_taboo_push): 
-                                macroActions.append(((box[1], box[0]), names))             
-                            else:
-                                if ((boxX, boxY) not in self.taboo):
-                                    macroActions.append(((box[1], box[0]), names))
+                            #check can go there
+                            if (can_go_there(warehouseObject, (workerY, workerX))):
+                                # check taboo
+                                if (self.allow_taboo_push): 
+                                    macroActions.append(((box[1], box[0]), names))             
+                                else:
+                                    if (self.taboo[boxY][boxX] != 'X'):
+                                        macroActions.append(((box[1], box[0]), names))
 
             return macroActions
 
@@ -320,7 +315,6 @@ def check_action_seq(warehouse, action_seq):
       - an action is legal even if it pushes a box onto a taboo cell.
         
     @param warehouse: a valid Warehouse object
-
     @param action_seq: a sequence of legal actions.
            For example, ['Left', 'Down', Down','Right', 'Up', 'Down']
            
@@ -380,7 +374,6 @@ def solve_sokoban_elem(warehouse):
     the puzzle defined in a file.
     
     @param warehouse: a valid Warehouse object
-
     @return
         If puzzle cannot be solved return the string 'Impossible'
         If a solution was found, return a list of elementary actions that solves
@@ -401,10 +394,7 @@ def solve_sokoban_elem(warehouse):
         
     
 #    def heuristic(n):
-#        distance = []
-#        
-        
-        
+#        distance = []        
     
     if puzzle.goal_test == True:
         return []
@@ -456,7 +446,6 @@ def can_go_there(warehouse, dst):
     without pushing any box.
     
     @param warehouse: a valid Warehouse object
-
     @return
       True if the worker can walk to cell dst=(row,column) without pushing any box
       False otherwise
@@ -475,6 +464,7 @@ def can_go_there(warehouse, dst):
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+## COORDINATE IS IN (y,x)
 def solve_sokoban_macro(warehouse):
     '''    
     Solve using macro actions the puzzle defined in the warehouse passed as
@@ -487,7 +477,6 @@ def solve_sokoban_macro(warehouse):
     goes the box at row 12 and column 4 and pushes it down.
     
     @param warehouse: a valid Warehouse object
-
     @return
         If puzzle cannot be solved return the string 'Impossible'
         Otherwise return M a sequence of macro actions that solves the puzzle.
@@ -495,7 +484,7 @@ def solve_sokoban_macro(warehouse):
     '''
     initialStr = str(warehouse)
     goalStr = str(warehouse).replace("$", " ").replace(".", "*").replace("@", " ")
-    puzzle = SokobanPuzzle(warehouse, initialStr, goalStr, macro = True)
+    puzzle = SokobanPuzzle(warehouse, initialStr, goalStr, macro = True, allow_taboo_push = False)
     
     def manhattenDistance(square1, square2):
         return (abs(square1[0]- square2[0]) + abs(square1[1] - square2[1]))
@@ -503,14 +492,14 @@ def solve_sokoban_macro(warehouse):
     def heuristic(n):
         state = n.state
         warehouseCurrent = Warehouse()
-        warehouseCurrent.extract_locations(state.split('\n'))
+        warehouseCurrent.extract_locations(state.split(sep='\n'))
         hVal = 0
         for box in warehouseCurrent.boxes:
             distance = 0
             for target in warehouseCurrent.targets:
                 distance += manhattenDistance(box, target)
                 
-            hVal += 0.4*distance/len(warehouseCurrent.targets) + 0.6*manhattenDistance(warehouseCurrent.worker, box) #no cost from worker to box for macro
+            hVal += 0.75*distance/len(warehouseCurrent.targets) + 0.2*manhattenDistance(warehouseCurrent.worker, box) #no cost from worker to box for macro
                 
         return hVal
                 
@@ -519,11 +508,11 @@ def solve_sokoban_macro(warehouse):
     if puzzle.goal_test == True:
         return []
     
-    else:
-        x = best_first_graph_search(puzzle, heuristic)
-#        x = breadth_first_graph_search(puzzle)
-        if x is None:
-            return ['Impossible']
+
+    x = best_first_graph_search(puzzle, heuristic)
+#    x = breadth_first_graph_search(puzzle)
+    if x is None:
+        return ['Impossible']
         
         
     
@@ -547,5 +536,6 @@ wh.load_warehouse("warehouses/warehouse_147.txt")
 #print(abc)
 t0 = time.time()
 x = solve_sokoban_macro(wh)
+print(x)
 t1 = time.time()
 print ("Solver took ",t1-t0, ' seconds')
