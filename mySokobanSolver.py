@@ -346,8 +346,6 @@ def check_action_seq(warehouse, action_seq):
             if (resultX, resultY) in warehouse.walls: 
                  #NOT OPTIMISED - loops through walls everytime.
                  #Alternative - load warehouse_2d once,  if (warehouse_2d(resultX,resultY) == "#")
-                 
-                 
                  # cannot move there since it's a wall
                 return failedSeq
             
@@ -393,13 +391,19 @@ def solve_sokoban_elem(warehouse):
     
     initialStr = str(warehouse)
     goalStr = str(warehouse).replace("$", " ").replace(".", "*").replace("@", " ")
-    puzzle = SokobanPuzzle(warehouse, initialStr, goalStr)
+    puzzle = SokobanPuzzle(warehouse, initialStr, goalStr, macro = False)
     
-    def heuristic(n):
+    def playerBoxDistance():
         distance = []
         for box in warehouse.boxes:
             distance.append(abs(warehouse.worker[0] - box[0]) + abs(warehouse.worker[1] - box[1]))   
         return min(distance)
+        
+    
+#    def heuristic(n):
+#        distance = []
+#        
+        
         
     
     if puzzle.goal_test == True:
@@ -468,6 +472,7 @@ def can_go_there(warehouse, dst):
     node = astar_graph_search(CanGoThereProblem(warehouse.worker, warehouse, dst),
                        heuristic)
     return node is not None
+
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 def solve_sokoban_macro(warehouse):
@@ -491,11 +496,32 @@ def solve_sokoban_macro(warehouse):
     initialStr = str(warehouse)
     goalStr = str(warehouse).replace("$", " ").replace(".", "*").replace("@", " ")
     puzzle = SokobanPuzzle(warehouse, initialStr, goalStr, macro = True)
+    
+    def manhattenDistance(square1, square2):
+        return (abs(square1[0]- square2[0]) + abs(square1[1] - square2[1]))
+    
+    def heuristic(n):
+        state = n.state
+        warehouseCurrent = Warehouse()
+        warehouseCurrent.extract_locations(state.split('\n'))
+        hVal = 0
+        for box in warehouseCurrent.boxes:
+            distance = 0
+            for target in warehouseCurrent.targets:
+                distance += manhattenDistance(box, target)
+                
+            hVal += 0.4*distance/len(warehouseCurrent.targets) + 0.6*manhattenDistance(warehouseCurrent.worker, box) #no cost from worker to box for macro
+                
+        return hVal
+                
+            
+    
     if puzzle.goal_test == True:
         return []
     
     else:
-        x = breadth_first_graph_search(puzzle)
+        x = best_first_graph_search(puzzle, heuristic)
+#        x = breadth_first_graph_search(puzzle)
         if x is None:
             return ['Impossible']
         
@@ -510,12 +536,10 @@ def solve_sokoban_macro(warehouse):
 
 
 # TESTING OF FUNCTION DIRECTLY ON THIS FILE CAN DELETE AFTER
-#wh = Warehouse()
-#wh.load_warehouse("warehouses/warehouse_01.txt")
+wh = Warehouse()
+wh.load_warehouse("warehouses/warehouse_147.txt")
 
-puzzle_t1 ='#######\n#@ $. #\n#######'
-wh = Warehouse()    
-wh.extract_locations(puzzle_t1.split(sep='\n'))
+
 # first test
 #answer = solve_sokoban_elem(wh)
 #puzzle = SokobanPuzzle(wh)
