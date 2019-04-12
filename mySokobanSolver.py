@@ -560,7 +560,7 @@ def solve_sokoban_macro(warehouse):
 
 # TESTING OF FUNCTION DIRECTLY ON THIS FILE CAN DELETE AFTER
 wh = Warehouse()
-wh.load_warehouse("warehouses/warehouse_03.txt")
+wh.load_warehouse("warehouses/warehouse_47.txt")
 
 
 # first test
