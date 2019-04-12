@@ -382,28 +382,62 @@ def solve_sokoban_elem(warehouse):
             If the puzzle is already in a goal state, simply return []
     '''
     
+    global actionDict
+    actionDict = {'Up':(0,-1), 'Down':(0,1), 'Left':(-1,0), 'Right':(1,0)}
+    
     initialStr = str(warehouse)
     goalStr = str(warehouse).replace("$", " ").replace(".", "*").replace("@", " ")
     puzzle = SokobanPuzzle(warehouse, initialStr, goalStr, macro = False)
     
-    def playerBoxDistance():
-        distance = []
-        for box in warehouse.boxes:
-            distance.append(abs(warehouse.worker[0] - box[0]) + abs(warehouse.worker[1] - box[1]))   
-        return min(distance)
-        
+#    def playerBoxDistance():
+#        distance = []
+#        for box in warehouse.boxes:
+#            distance.append(abs(warehouse.worker[0] - box[0]) + abs(warehouse.worker[1] - box[1]))   
+#        return min(distance)
     
-#    def heuristic(n):
-#        distance = []        
     
     if puzzle.goal_test == True:
         return []
-    
-    else:
-        x = breadth_first_graph_search(puzzle)
-        if x is None:
-            return ['Impossible']
         
+    x = solve_sokoban_macro(warehouse)
+    if x is None:
+        return ['Impossible']
+    
+    
+    def manhattanDistance(square1, square2):
+        return (abs(square1[0]- square2[0]) + abs(square1[1] - square2[1]))
+
+    global nextPos
+    boxNumber = 0
+    nextPos = []
+    for box, name in x:
+            newPos = (box[0]-actionDict[name][0] , box[1]-actionDict[name][1]) # newPos for worker
+            nextPos.append(newPos)
+    
+#    def heuristic(n):
+#        global boxNumber
+#        state = n.state
+#        warehouseCurrent = Warehouse()    
+#        warehouseCurrent.extract_locations(state.split(sep='\n'))        
+#        if warehouseCurrent.worker == nextPos[boxNumber]:
+#            boxNumber += 1
+#            return math.sqrt((nextPos[boxNumber][0]-warehouseCurrent.worker[0])**2 + (nextPos[boxNumber][1]-warehouseCurrent.worker[1])**2)
+#            
+    
+        
+    def heuristic(n):
+        state = n.state
+        warehouseCurrent = Warehouse()
+        warehouseCurrent.extract_locations(state.split(sep='\n'))
+        hVal = 0
+        for box in warehouseCurrent.boxes:
+            hVal += math.sqrt((box[0]- warehouseCurrent.worker[0])**2 + (box[1] - warehouseCurrent.worker[1])**2)
+        return hVal/len(warehouseCurrent.boxes)
+    
+
+    x = best_first_graph_search(puzzle, heuristic)
+#    x = breadth_first_graph_search(puzzle)
+
     
     nodes = x.path()
     nodes = [eachNode.action for eachNode in nodes]
@@ -486,7 +520,7 @@ def solve_sokoban_macro(warehouse):
     goalStr = str(warehouse).replace("$", " ").replace(".", "*").replace("@", " ")
     puzzle = SokobanPuzzle(warehouse, initialStr, goalStr, macro = True, allow_taboo_push = False)
     
-    def manhattenDistance(square1, square2):
+    def manhattanDistance(square1, square2):
         return (abs(square1[0]- square2[0]) + abs(square1[1] - square2[1]))
     
     def heuristic(n):
@@ -497,9 +531,9 @@ def solve_sokoban_macro(warehouse):
         for box in warehouseCurrent.boxes:
             distance = 0
             for target in warehouseCurrent.targets:
-                distance += manhattenDistance(box, target)
+                distance += manhattanDistance(box, target)
                 
-            hVal += 0.75*distance/len(warehouseCurrent.targets) + 0.2*manhattenDistance(warehouseCurrent.worker, box) #no cost from worker to box for macro
+            hVal += 0.75*distance/len(warehouseCurrent.targets) + 0.2*manhattanDistance(warehouseCurrent.worker, box) #no cost from worker to box for macro
                 
         return hVal
                 
@@ -526,7 +560,7 @@ def solve_sokoban_macro(warehouse):
 
 # TESTING OF FUNCTION DIRECTLY ON THIS FILE CAN DELETE AFTER
 wh = Warehouse()
-wh.load_warehouse("warehouses/warehouse_147.txt")
+wh.load_warehouse("warehouses/warehouse_03.txt")
 
 
 # first test
@@ -535,7 +569,7 @@ wh.load_warehouse("warehouses/warehouse_147.txt")
 
 #print(abc)
 t0 = time.time()
-x = solve_sokoban_macro(wh)
+x = solve_sokoban_elem(wh)
 print(x)
 t1 = time.time()
 print ("Solver took ",t1-t0, ' seconds')
