@@ -34,6 +34,7 @@ def my_team():
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 
+
 def taboo_cells(warehouse):
     '''  
     Identify the taboo cells of a warehouse. A cell inside a warehouse is 
@@ -54,21 +55,25 @@ def taboo_cells(warehouse):
        The returned string should NOT have marks for the worker, the targets,
        and the boxes.  
     '''
-    ##         "INSERT YOUR CODE HERE"    
-    signsNotNeeded = ['@', '$'] # character and box symbol
-    targetSquares = ['!', '.', '*'] # Player on goal, empty goal, and box on goal symbol
+    
+    # Fixed signs that are used for clarity
+    signsNotNeeded = ['@', '$']
+    targetSquares = ['!', '.', '*']
     wall = '#'
     taboo = 'X'
 
-    def check_corner_square(warehouse, x, y, alongWall=0):
+    global actionDict
+    actionDict = {'Up':(0,-1), 'Down':(0,1), 'Left':(-1,0), 'Right':(1,0)}
+    
+    def check_corner_square(warehouse, x, y, alongWall= False):
         walls_above_below = 0
         walls_left_right = 0
         # check for walls above and below
-        for (dx, dy) in [(0, -1), (0, 1)]:
+        for (dx, dy) in [actionDict['Up'], actionDict['Down']]:
             if warehouse[y + dy][x + dx] == wall:
                 walls_above_below += 1
         # check for walls left and right
-        for (dx, dy) in [(-1, 0), (1, 0)]:
+        for (dx, dy) in [actionDict['Left'], actionDict['Right']]:
             if warehouse[y + dy][x + dx] == wall:
                 walls_left_right += 1
         if alongWall:
@@ -81,15 +86,16 @@ def taboo_cells(warehouse):
     #   1
     #   2
     #   3
+    
     warehouseStr = str(warehouse)
     #Remove boxes and player
     for char in signsNotNeeded:
         warehouseStr = warehouseStr.replace(char, ' ')
         
     warehouse_2d = [list(row) for row in warehouseStr.split('\n')]
-    """ 2d array is jagged, """
     
-    ''' rule 1 function '''
+    
+    # Function to fulfil rule 1
     def rule1(warehouse_2d):
         for y in range(len(warehouse_2d) - 1):
             inside = False
@@ -110,7 +116,7 @@ def taboo_cells(warehouse):
                                 warehouse_2d[y][x] = taboo
         return warehouse_2d
         
-        
+    # function to fulfil rule 2
     def rule2(warehouse_2d):
         for y in range(1, len(warehouse_2d)-1):
             for x in range(1, len(warehouse_2d[0]) - 1):
@@ -119,31 +125,34 @@ def taboo_cells(warehouse):
                     currentColumn = [eachRow[x] for eachRow in warehouse_2d[y + 1:]]
                 
                     
-                    # to check across left to right
+                    # to check cells across left to right 
                     for nextSquare in range(len(currentRow)):
                         #if any of the do not touch symbols
                         if currentRow[nextSquare] in targetSquares or currentRow[nextSquare] == wall:
                             break 
                         
                         if currentRow[nextSquare] == taboo and check_corner_square(warehouse_2d, x + nextSquare + 1, y):
-                            if all([check_corner_square(warehouse_2d, nextNextSquare, y, 1)
+                            if all([check_corner_square(warehouse_2d, nextNextSquare, y, True)
                                     for nextNextSquare in range(x+1, nextSquare + x + 1)]):
                                 for edgeSquares in range(x+1, nextSquare + x + 1):
                                     warehouse_2d[y][edgeSquares] = taboo
-                    # to check up and down
+                   
+                    # to check cells up and down
                     for nextSquareY in range(len(currentColumn)):
                         if currentColumn[nextSquareY] in targetSquares or currentColumn[nextSquareY] == wall:
                             break
                         
                         if currentColumn[nextSquareY] == taboo and check_corner_square(warehouse_2d, x, nextSquareY + y + 1):
-                            if all([check_corner_square(warehouse_2d, x, nextNextSquareY, 1)
+                            if all([check_corner_square(warehouse_2d, x, nextNextSquareY, True)
                                     for nextNextSquareY in range(y + 1, nextSquareY + y + 1)]):
                                 for edgeSquaresY in range(y + 1, nextSquareY + y + 1):
                                     warehouse_2d[edgeSquaresY][x] = taboo
         return warehouse_2d
                     
-    warehouse_2d = rule2(rule1(warehouse_2d)) #Tested working
+    warehouse_2d = rule2(rule1(warehouse_2d))
     
+    
+    ### Converts back to string for sanity_check to pass
     #Convert 2D array back into string
     warehouse_taboo = '\n'.join([''.join(line) for line in warehouse_2d])
     #Remove target square symbols
@@ -152,10 +161,6 @@ def taboo_cells(warehouse):
         
     
     return warehouse_taboo
-
-            
-    
-    
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -183,14 +188,6 @@ class SokobanPuzzle(search.Problem):
     
     
     '''
-    #
-    #         "INSERT YOUR CODE HERE"
-    #
-    #     Revisit the sliding puzzle and the pancake puzzle for inspiration!
-    #
-    #     Note that you will need to add several functions to 
-    #     complete this class. For example, a 'result' function is needed
-    #     to satisfy the interface of 'search.Problem'.
 
     global actionDict
     actionDict = {'Up':(0,-1), 'Down':(0,1), 'Left':(-1,0), 'Right':(1,0)}
@@ -201,8 +198,11 @@ class SokobanPuzzle(search.Problem):
             self.initial = str(warehouse)
         else:
             self.initial = initial
+        
+        # Goal string is initial string replaced with boxes removed and 
+        # targets(.) replaced with boxes on target(*) 
         if goal == None:
-            self.goal = str(warehouse).replace("$", " ").replace(".", "*")
+            self.goal = str(warehouse).replace("$", " ").replace(".", "*").replace("!", "*")
         else:
             self.goal = goal
         self.macro = macro
@@ -217,6 +217,7 @@ class SokobanPuzzle(search.Problem):
         'self.allow_taboo_push' and 'self.macro' should be tested to determine
         what type of list of actions is to be returned.
         """
+        
         warehouseObject = Warehouse()
         warehouseObject.extract_locations(state.split(sep='\n'))
         
@@ -277,13 +278,14 @@ class SokobanPuzzle(search.Problem):
         warehouseObject.extract_locations(state.split(sep='\n'))
         if self.macro:
             action = ((action[0][1], action[0][0]), action[1])
-            playerPosX = action[0][0] + actionDict[action[1]][0]
-            playerPosY = action[0][1] + actionDict[action[1]][1]
-            
-            warehouseObject.boxes.remove((action[0][0], action[0][1]))
-            warehouseObject.boxes.append((playerPosX, playerPosY))
-            
-            warehouseObject.worker = (action[0][0], action[0][1])
+            if (action[0] in warehouseObject.boxes):
+                playerPosX = action[0][0] + actionDict[action[1]][0]
+                playerPosY = action[0][1] + actionDict[action[1]][1]
+                
+                warehouseObject.boxes.remove((action[0][0], action[0][1]))
+                warehouseObject.boxes.append((playerPosX, playerPosY))
+                
+                warehouseObject.worker = (action[0][0], action[0][1])
         
         else:
             
@@ -389,55 +391,45 @@ def solve_sokoban_elem(warehouse):
     goalStr = str(warehouse).replace("$", " ").replace(".", "*").replace("@", " ")
     puzzle = SokobanPuzzle(warehouse, initialStr, goalStr, macro = False)
     
-#    def playerBoxDistance():
-#        distance = []
-#        for box in warehouse.boxes:
-#            distance.append(abs(warehouse.worker[0] - box[0]) + abs(warehouse.worker[1] - box[1]))   
-#        return min(distance)
-    
+#    x = solve_sokoban_macro(warehouse)
+#    nodes = x.path()
+#    nodes = [eachNode.action for eachNode in nodes]
+#    macro_path = nodes[1:]
     
     if puzzle.goal_test == True:
-        return []
-        
-    x = solve_sokoban_macro(warehouse)
-    if x is None:
-        return ['Impossible']
-    
+        return []    
     
     def manhattanDistance(square1, square2):
         return (abs(square1[0]- square2[0]) + abs(square1[1] - square2[1]))
 
-    global nextPos
-    boxNumber = 0
-    nextPos = []
-    for box, name in x:
-            newPos = (box[0]-actionDict[name][0] , box[1]-actionDict[name][1]) # newPos for worker
-            nextPos.append(newPos)
-    
-#    def heuristic(n):
-#        global boxNumber
-#        state = n.state
-#        warehouseCurrent = Warehouse()    
-#        warehouseCurrent.extract_locations(state.split(sep='\n'))        
-#        if warehouseCurrent.worker == nextPos[boxNumber]:
-#            boxNumber += 1
-#            return math.sqrt((nextPos[boxNumber][0]-warehouseCurrent.worker[0])**2 + (nextPos[boxNumber][1]-warehouseCurrent.worker[1])**2)
-#            
-    
-        
     def heuristic(n):
         state = n.state
         warehouseCurrent = Warehouse()
         warehouseCurrent.extract_locations(state.split(sep='\n'))
         hVal = 0
         for box in warehouseCurrent.boxes:
-            hVal += math.sqrt((box[0]- warehouseCurrent.worker[0])**2 + (box[1] - warehouseCurrent.worker[1])**2)
-        return hVal/len(warehouseCurrent.boxes)
+            distance = 0
+            for target in warehouseCurrent.targets:
+                distance += manhattanDistance(box, target)
+                
+            hVal += 0.2*distance/len(warehouseCurrent.targets) + 0.75*manhattanDistance(warehouseCurrent.worker, box) #no cost from worker to box for macro
+                
+        return hVal
+        
+#    def heuristic(n):
+#        state = n.state
+#        warehouseCurrent = Warehouse()
+#        warehouseCurrent.extract_locations(state.split(sep='\n'))
+#        hVal = 0
+#        for box in warehouseCurrent.boxes:
+#            hVal += math.sqrt((box[0]- warehouseCurrent.worker[0])**2 + (box[1] - warehouseCurrent.worker[1])**2)
+#        return hVal/len(warehouseCurrent.boxes)
     
 
     x = best_first_graph_search(puzzle, heuristic)
 #    x = breadth_first_graph_search(puzzle)
-
+    if x is None:
+        return ['Impossible']
     
     nodes = x.path()
     nodes = [eachNode.action for eachNode in nodes]
@@ -447,7 +439,13 @@ def solve_sokoban_elem(warehouse):
     
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 class CanGoThereProblem(search.Problem):
+    '''
+    An instance of the class 'CanGoThereProblem' represents a problem between worker and destination.
+    An instance contains information about the walls, targets, boxes and worker.
     
+    Each instance contains the initial string of the warehouse, the warehouse object
+    and the destination of the worker (goal state)
+    '''
     def __init__(self, initial, warehouse, goal=None):
         self.initial = initial
         self.goal = goal
@@ -455,9 +453,6 @@ class CanGoThereProblem(search.Problem):
         
     global actionDict
     actionDict = {'Up':(0,-1), 'Down':(0,1), 'Left':(-1,0), 'Right':(1,0)}
-    
-    def value(self, state):
-        return 1 
     
     ''' all possible actions'''
     def actions(self, state):
@@ -467,6 +462,7 @@ class CanGoThereProblem(search.Problem):
             if newPos not in self.warehouse.walls:
                 if newPos not in self.warehouse.boxes:
                     yield coords
+                
                 
     '''resulting state after action'''
     def result(self, state, action):
@@ -485,15 +481,17 @@ def can_go_there(warehouse, dst):
       False otherwise
     '''
     
+    ''' The heuristic is defined as the shortest distance from worker to destination'''
     def heuristic(GoThereProblem):
         state = GoThereProblem.state
-        # distance = sqrt(xdist^2 + ydist^2). Basic distance formula heuristic.
         return math.sqrt((math.pow(state[1] - dst[1], 2)) + (math.pow(state[0] - dst[0], 2)))
 
     dst = (dst[1], dst[0])
-    # Use an A* graph search on the CanGoThereProblem search
-    node = astar_graph_search(CanGoThereProblem(warehouse.worker, warehouse, dst),
+    
+    # Use best first graph search on the CanGoThereProblem search
+    node = best_first_graph_search(CanGoThereProblem(warehouse.worker, warehouse, dst),
                        heuristic)
+    
     return node is not None
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -517,12 +515,21 @@ def solve_sokoban_macro(warehouse):
         If the puzzle is already in a goal state, simply return []
     '''
     initialStr = str(warehouse)
+    
+    # Goal string is initial string where all boxes are on targets, represented by *
+    # and player is removed so the final position of the player does not matter
     goalStr = str(warehouse).replace("$", " ").replace(".", "*").replace("@", " ")
+    
+    # A puzzle is initialised with the following variables and allow_taboo_push is set to false
+    # to increase speed for testing
     puzzle = SokobanPuzzle(warehouse, initialStr, goalStr, macro = True, allow_taboo_push = False)
     
+    
+    # Basic formula for Manhattan distance predefined
     def manhattanDistance(square1, square2):
         return (abs(square1[0]- square2[0]) + abs(square1[1] - square2[1]))
-    
+
+    # Heuristic formula is based on sum of the average distance of each box to all targets
     def heuristic(n):
         state = n.state
         warehouseCurrent = Warehouse()
@@ -533,23 +540,24 @@ def solve_sokoban_macro(warehouse):
             for target in warehouseCurrent.targets:
                 distance += manhattanDistance(box, target)
                 
-            hVal += 0.75*distance/len(warehouseCurrent.targets) + 0.2*manhattanDistance(warehouseCurrent.worker, box) #no cost from worker to box for macro
+            hVal += distance/len(warehouseCurrent.targets) #no cost from worker to box for macro
                 
         return hVal
-                
-            
-    
+        
+    # Tests for goal test before running search to prevent pointless search
     if puzzle.goal_test == True:
         return []
-    
 
+    # Greedy first search is used to fasten process
     x = best_first_graph_search(puzzle, heuristic)
 #    x = breadth_first_graph_search(puzzle)
+    
+    # Returns a list with string Impossible if no solution can be found
     if x is None:
         return ['Impossible']
         
         
-    
+    # Assigns path of solution and create a generator for each node.
     nodes = x.path()
     nodes = [eachNode.action for eachNode in nodes]
     return(nodes[1:])
@@ -560,16 +568,9 @@ def solve_sokoban_macro(warehouse):
 
 # TESTING OF FUNCTION DIRECTLY ON THIS FILE CAN DELETE AFTER
 wh = Warehouse()
-wh.load_warehouse("warehouses/warehouse_47.txt")
-
-
-# first test
-#answer = solve_sokoban_elem(wh)
-#puzzle = SokobanPuzzle(wh)
-
-#print(abc)
+wh.load_warehouse("warehouses/warehouse_147.txt")
 t0 = time.time()
-x = solve_sokoban_elem(wh)
+x = solve_sokoban_macro(wh)
 print(x)
 t1 = time.time()
 print ("Solver took ",t1-t0, ' seconds')
