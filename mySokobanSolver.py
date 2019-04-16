@@ -224,6 +224,7 @@ class SokobanPuzzle(search.Problem):
         validActions = []
         macroActions = []
         
+        # Elementary actions
         if not self.macro:
             for names, coords in actionDict.items():
                 # resulted coords from 1 single action
@@ -231,6 +232,7 @@ class SokobanPuzzle(search.Problem):
                 resultY = warehouseObject.worker[1] + coords[1]
                 
                 #optimised
+                # If next block is not a wall or a box, its a space
                 if (resultX, resultY) not in warehouseObject.walls and (resultX, resultY) not in warehouseObject.boxes:
                     validActions.append(names)                   
                     
@@ -250,6 +252,7 @@ class SokobanPuzzle(search.Problem):
 
             return validActions
         
+        # Macro actions
         if self.macro:
             for box in warehouseObject.boxes:
                 for names, coords in actionDict.items():
@@ -257,10 +260,13 @@ class SokobanPuzzle(search.Problem):
                     workerY = box[1]-coords[1]
                     
                     # optimised
+                    # If new position is not a wall or a box
                     if (workerX, workerY) not in warehouseObject.walls and (workerX, workerY) not in warehouseObject.boxes:
                         # can push box
                         boxX = box[0] + coords[0]
                         boxY = box[1] + coords[1]
+                        
+                        # If box's new position is not another box or wall
                         if ((boxX, boxY) not in warehouseObject.boxes and (boxX, boxY) not in warehouseObject.walls):
                             #check can go there
                             if (can_go_there(warehouseObject, (workerY, workerX))):
@@ -274,6 +280,11 @@ class SokobanPuzzle(search.Problem):
             return macroActions
 
     def result(self, state, action):
+        """Return the state that results from executing the given
+            action in the given state. The action must be one of
+            self.actions(state).
+            We have two different types of action depending on self.macro = True/False    
+        """
         warehouseObject = Warehouse()
         warehouseObject.extract_locations(state.split(sep='\n'))
         if self.macro:
@@ -303,7 +314,17 @@ class SokobanPuzzle(search.Problem):
 
           
     def goal_test(self, state):
+        """Return True if the state is a goal by removing the player from warehouse string
+        """
         return self.goal == state.replace("@", " ")
+    
+    def path_cost(self, c, state1, action, state2):
+        """Return the cost of a solution path that arrives at state2 from
+        state1 via action, assuming cost c to get up to state1. If the problem
+        is such that the path doesn't matter, this function will only look at
+        state2.  If the path does matter, it will consider c and maybe state1
+        and action. The default method costs 1 for every step in the path."""
+        return c + 1
     
 ## - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -332,6 +353,7 @@ def check_action_seq(warehouse, action_seq):
     failedSeq = 'Failure'
     actionDict = {'Up':(0,-1), 'Down':(0,1), 'Left':(-1,0), 'Right':(1,0)}
     
+    # Get each action
     for actions in action_seq:
         currentPos = warehouse.worker
         if actions in actionDict.keys():
@@ -340,21 +362,17 @@ def check_action_seq(warehouse, action_seq):
             resultY = currentPos[1] + actionDict.get(actions)[1]
              
             if (resultX, resultY) in warehouse.walls: 
-                 #NOT OPTIMISED - loops through walls everytime.
-                 #Alternative - load warehouse_2d once,  if (warehouse_2d(resultX,resultY) == "#")
                  # cannot move there since it's a wall
                 return failedSeq
             
+            # Checks if its box
             elif (resultX, resultY) in warehouse.boxes:
                 # coords of box after actions
                 boxResultX = resultX + actionDict.get(actions)[0] 
                 boxResultY = resultY + actionDict.get(actions)[1]
                  
-                # if moved box is wall/ another box
-                if (boxResultX, boxResultY) in warehouse.walls or (boxResultX,boxResultY) in warehouse.boxes:
-                    #NOT OPTIMISED - loops through walls everytime.
-                    #Alternative - load warehouse_2d once,  if (warehouse_2d(resultX,resultY) == "#")
-                    
+                # if moved box is wall/ another box it's a wrong sequence
+                if (boxResultX, boxResultY) in warehouse.walls or (boxResultX,boxResultY) in warehouse.boxes:                    
                     return failedSeq
                  
                 # successful, commit changes to coords
@@ -389,12 +407,8 @@ def solve_sokoban_elem(warehouse):
     
     initialStr = str(warehouse)
     goalStr = str(warehouse).replace("$", " ").replace(".", "*").replace("@", " ")
+    # Initialise a puzzle with elementary actions
     puzzle = SokobanPuzzle(warehouse, initialStr, goalStr, macro = False)
-    
-#    x = solve_sokoban_macro(warehouse)
-#    nodes = x.path()
-#    nodes = [eachNode.action for eachNode in nodes]
-#    macro_path = nodes[1:]
     
     if puzzle.goal_test == True:
         return []    
@@ -410,9 +424,11 @@ def solve_sokoban_elem(warehouse):
         for box in warehouseCurrent.boxes:
             distance = 0
             for target in warehouseCurrent.targets:
+                # Sums distance from box to all targets
                 distance += manhattanDistance(box, target)
                 
-            hVal += 0.2*distance/len(warehouseCurrent.targets) + 0.75*manhattanDistance(warehouseCurrent.worker, box) #no cost from worker to box for macro
+            # We define h as the average distance of a box to all targets and manhattan distance of worker to all boxes
+            hVal += 0.2*distance/len(warehouseCurrent.targets) + 0.75*manhattanDistance(warehouseCurrent.worker, box)
                 
         return hVal
         
@@ -428,9 +444,13 @@ def solve_sokoban_elem(warehouse):
 
     x = best_first_graph_search(puzzle, heuristic)
 #    x = breadth_first_graph_search(puzzle)
+    
+    # Returns a list with string Impossible if no solution can be found
     if x is None:
         return ['Impossible']
-    
+        
+        
+    # Assigns path of solution and create a generator for each node.
     nodes = x.path()
     nodes = [eachNode.action for eachNode in nodes]
     return(nodes[1:])
@@ -454,8 +474,11 @@ class CanGoThereProblem(search.Problem):
     global actionDict
     actionDict = {'Up':(0,-1), 'Down':(0,1), 'Left':(-1,0), 'Right':(1,0)}
     
-    ''' all possible actions'''
+    
     def actions(self, state):
+        """Return the actions that can be executed in the given
+        state.
+        """
         for names, coords in actionDict.items():
             newPos = (state[0] + coords[0], state[1] + coords[1])
             
@@ -464,8 +487,11 @@ class CanGoThereProblem(search.Problem):
                     yield coords
                 
                 
-    '''resulting state after action'''
     def result(self, state, action):
+        """Return the state that results from executing the given
+        action in the given state. The action must be one of
+        self.actions(state).
+        """
         return ((state[0] + action[0], state[1] + action[1]))
     
     
@@ -481,7 +507,7 @@ def can_go_there(warehouse, dst):
       False otherwise
     '''
     
-    ''' The heuristic is defined as the shortest distance from worker to destination'''
+    # The heuristic is defined as the shortest distance from worker to destination
     def heuristic(GoThereProblem):
         state = GoThereProblem.state
         return math.sqrt((math.pow(state[1] - dst[1], 2)) + (math.pow(state[0] - dst[0], 2)))
@@ -542,16 +568,15 @@ def solve_sokoban_macro(warehouse):
                 
             hVal += distance/len(warehouseCurrent.targets) #no cost from worker to box for macro
                 
-        return hVal
+        return (1/len(warehouseCurrent.boxes))*hVal
         
     # Tests for goal test before running search to prevent pointless search
     if puzzle.goal_test == True:
         return []
 
     # Greedy first search is used to fasten process
-    x = best_first_graph_search(puzzle, heuristic)
-#    x = breadth_first_graph_search(puzzle)
-    
+#    x = best_first_graph_search(puzzle, heuristic)
+    x = astar_graph_search(puzzle, heuristic)    
     # Returns a list with string Impossible if no solution can be found
     if x is None:
         return ['Impossible']
@@ -567,10 +592,10 @@ def solve_sokoban_macro(warehouse):
 
 
 # TESTING OF FUNCTION DIRECTLY ON THIS FILE CAN DELETE AFTER
-wh = Warehouse()
-wh.load_warehouse("warehouses/warehouse_147.txt")
-t0 = time.time()
-x = solve_sokoban_macro(wh)
-print(x)
-t1 = time.time()
-print ("Solver took ",t1-t0, ' seconds')
+#wh = Warehouse()
+#wh.load_warehouse("warehouses/warehouse_147.txt")
+#t0 = time.time()
+#x = solve_sokoban_macro(wh)
+#print(x)
+#t1 = time.time()
+#print ("Solver took ",t1-t0, ' seconds')
