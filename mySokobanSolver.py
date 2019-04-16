@@ -186,7 +186,6 @@ class SokobanPuzzle(search.Problem):
     macro actions. If self.macro is set False, the 'actions' function should 
     return elementary actions.
     
-    
     '''
 
     global actionDict
@@ -566,7 +565,7 @@ def solve_sokoban_macro(warehouse):
             for target in warehouseCurrent.targets:
                 targetDistance += manhattanDistance(box, target)
                 
-            hVal = manhattanDistance(warehouseCurrent.worker, box)/len(warehouseCurrent.boxes) + targetDistance/len(warehouseCurrent.targets) #no cost from worker to box for macro
+            hVal += 2*targetDistance #no cost from worker to box for macro
                 
         return hVal
         
@@ -574,9 +573,9 @@ def solve_sokoban_macro(warehouse):
     if puzzle.goal_test == True:
         return []
 
-    # Greedy first search is used to fasten process
-    x = best_first_graph_search(puzzle, heuristic)
-#    x = astar_graph_search(puzzle, heuristic)    
+#     Greedy first search is used to fasten process
+#    x = best_first_graph_search(puzzle, heuristic)
+    x = astar_graph_search(puzzle, heuristic)    
     # Returns a list with string Impossible if no solution can be found
     if x is None:
         return ['Impossible']
@@ -593,7 +592,7 @@ def solve_sokoban_macro(warehouse):
 
 # TESTING OF FUNCTION DIRECTLY ON THIS FILE CAN DELETE AFTER
 wh = Warehouse()
-wh.load_warehouse("warehouses/warehouse_57.txt")
+wh.load_warehouse("warehouses/warehouse_05.txt")
 t0 = time.time()
 x = solve_sokoban_macro(wh)
 print(x)
