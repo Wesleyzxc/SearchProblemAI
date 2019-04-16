@@ -421,13 +421,11 @@ def solve_sokoban_elem(warehouse):
         warehouseCurrent.extract_locations(state.split(sep='\n'))
         hVal = 0
         for box in warehouseCurrent.boxes:
-            distance = 0
+            targetDistance = 0
             for target in warehouseCurrent.targets:
-                # Sums distance from box to all targets
-                distance += manhattanDistance(box, target)
+                targetDistance += manhattanDistance(box, target)
                 
-            # We define h as the average distance of a box to all targets and manhattan distance of worker to all boxes
-            hVal += 0.2*distance/len(warehouseCurrent.targets) + 0.75*manhattanDistance(warehouseCurrent.worker, box)
+            hVal += 2*manhattanDistance(warehouseCurrent.worker, box)/(len(warehouseCurrent.boxes))
                 
         return hVal
         
@@ -441,7 +439,7 @@ def solve_sokoban_elem(warehouse):
 #        return hVal/len(warehouseCurrent.boxes)
     
 
-    x = best_first_graph_search(puzzle, heuristic)
+    x = astar_graph_search(puzzle, heuristic)
 #    x = breadth_first_graph_search(puzzle)
     
     # Returns a list with string Impossible if no solution can be found
@@ -592,9 +590,9 @@ def solve_sokoban_macro(warehouse):
 
 # TESTING OF FUNCTION DIRECTLY ON THIS FILE CAN DELETE AFTER
 wh = Warehouse()
-wh.load_warehouse("warehouses/warehouse_05.txt")
+wh.load_warehouse("warehouses/warehouse_47.txt")
 t0 = time.time()
-x = solve_sokoban_macro(wh)
+x = solve_sokoban_elem(wh)
 print(x)
 t1 = time.time()
 print ("Solver took ",t1-t0, ' seconds')
