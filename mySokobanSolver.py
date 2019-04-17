@@ -558,19 +558,32 @@ def solve_sokoban_macro(warehouse):
         return (abs(square1[0]- square2[0]) + abs(square1[1] - square2[1]))
 
     # Heuristic formula is based on sum of the average distance of each box to all targets
+#    def heuristic(n):
+#        state = n.state
+#        warehouseCurrent = Warehouse()
+#        warehouseCurrent.extract_locations(state.split(sep='\n'))
+#        hVal = 0
+#        for box in warehouseCurrent.boxes:
+#            targetDistance = 0
+#            for target in warehouseCurrent.targets:
+#                targetDistance += manhattanDistance(box, target)
+#                
+#            hVal += targetDistance #no cost from worker to box for macro
+#                
+#        return hVal/len(warehouseCurrent.boxes)
+    
+    
     def heuristic(n):
         state = n.state
         warehouseCurrent = Warehouse()
         warehouseCurrent.extract_locations(state.split(sep='\n'))
-        hVal = 0
+        hVal = []
         for box in warehouseCurrent.boxes:
             targetDistance = 0
             for target in warehouseCurrent.targets:
-                targetDistance += manhattanDistance(box, target)
+                hVal.append(manhattanDistance(box, target))
                 
-            hVal += 2*targetDistance #no cost from worker to box for macro
-                
-        return hVal
+        return min(hVal)
         
     # Tests for goal test before running search to prevent pointless search
     if puzzle.goal_test == True:
@@ -595,9 +608,9 @@ def solve_sokoban_macro(warehouse):
 
 # TESTING OF FUNCTION DIRECTLY ON THIS FILE CAN DELETE AFTER
 wh = Warehouse()
-wh.load_warehouse("warehouses/warehouse_07.txt")
+wh.load_warehouse("warehouses/warehouse_147.txt")
 t0 = time.time()
-x = solve_sokoban_elem(wh)
+x = solve_sokoban_macro(wh)
 print(x)
 t1 = time.time()
 print ("Solver took ",t1-t0, ' seconds')
