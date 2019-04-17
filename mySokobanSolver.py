@@ -409,50 +409,52 @@ def solve_sokoban_elem(warehouse):
     # Initialise a puzzle with elementary actions
     puzzle = SokobanPuzzle(warehouse, initialStr, goalStr, macro = False)
     
-    if puzzle.goal_test == True:
+    macroSolutions = solve_sokoban_macro(warehouse)
+    if macroSolutions == ['Impossible']:
+        return macroSolutions
+
+    elif puzzle.goal_test == True:
         return []    
     
-    def manhattanDistance(square1, square2):
-        return (abs(square1[0]- square2[0]) + abs(square1[1] - square2[1]))
-
-    def heuristic(n):
-        state = n.state
-        warehouseCurrent = Warehouse()
-        warehouseCurrent.extract_locations(state.split(sep='\n'))
-        hVal = 0
-        for box in warehouseCurrent.boxes:
-            targetDistance = 0
-            for target in warehouseCurrent.targets:
-                targetDistance += manhattanDistance(box, target)
-                
-            hVal += 2*manhattanDistance(warehouseCurrent.worker, box)/(len(warehouseCurrent.boxes))
-                
-        return hVal
+    # Elementary solutions based on names
+    elemSolutions = []
+    
+    # Elementary solutions based on move coordinates
+    pathCoords = []
+    
+    # New instance of warehouse to keep track of box pushes
+    wh = Warehouse()
+    wh.extract_locations(str(warehouse).split(sep="\n"))
+    for eachBox, eachPush in macroSolutions:
+        workerPos = (eachBox[0] - actionDict[eachPush][1], eachBox[1] - actionDict[eachPush][0])
         
-#    def heuristic(n):
-#        state = n.state
-#        warehouseCurrent = Warehouse()
-#        warehouseCurrent.extract_locations(state.split(sep='\n'))
-#        hVal = 0
-#        for box in warehouseCurrent.boxes:
-#            hVal += math.sqrt((box[0]- warehouseCurrent.worker[0])**2 + (box[1] - warehouseCurrent.worker[1])**2)
-#        return hVal/len(warehouseCurrent.boxes)
-    
-
-    x = astar_graph_search(puzzle, heuristic)
-#    x = breadth_first_graph_search(puzzle)
-    
-    # Returns a list with string Impossible if no solution can be found
-    if x is None:
-        return ['Impossible']
+        # Solving CanGoThere problem with destination at workerPos
+        def heuristic(n):
+            state = n.state
+            return math.sqrt((math.pow(state[1] - workerPos[1], 2)) + (math.pow(state[0] - workerPos[0], 2)))
         
         
-    # Assigns path of solution and create a generator for each node.
-    nodes = x.path()
-    nodes = [eachNode.action for eachNode in nodes]
-    return(nodes[1:])
+        actionCoords = astar_graph_search(CanGoThereProblem(wh.worker, wh, (workerPos[1], workerPos[0])), heuristic)
+        # Getting path to each macro actions
+        nodePath = actionCoords.path()[1:]
+        nodePath = [each.action for each in nodePath]        
+        
+        # Append path to master list
+        for eachCoord in nodePath:
+            pathCoords.append(eachCoord)
+        # Append action of pushed box as well 
+        pathCoords.append(actionDict[eachPush])
+        
+        # Updating box and player coordinates
+        wh.boxes.remove((eachBox[1], eachBox[0]))
+        wh.worker = (eachBox[1], eachBox[0])
+        wh.boxes.append((eachBox[1] + actionDict[eachPush][0], eachBox[0] + actionDict[eachPush][1]))
     
-    
+    # Finding key to value provided by pathCoords with generator
+    for eachCoords in pathCoords:
+        elemSolutions.append([names for names,coords in actionDict.items() if coords == eachCoords][0])
+        
+    return elemSolutions
     
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 class CanGoThereProblem(search.Problem):
@@ -493,7 +495,7 @@ class CanGoThereProblem(search.Problem):
     
     
     
-def can_go_there(warehouse, dst):
+def can_go_there(warehouse, dst, returnNode = False):
     '''    
     Determine whether the worker can walk to the cell dst=(row,column) 
     without pushing any box.
@@ -512,10 +514,13 @@ def can_go_there(warehouse, dst):
     dst = (dst[1], dst[0])
     
     # Use best first graph search on the CanGoThereProblem search
-    node = best_first_graph_search(CanGoThereProblem(warehouse.worker, warehouse, dst),
+    node = astar_graph_search(CanGoThereProblem(warehouse.worker, warehouse, dst),
                        heuristic)
-    
-    return node is not None
+    if returnNode == False:
+        return node is not None
+    else:
+        nodePath = node.path()[1:]
+        return [each.action for each in nodePath]
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -590,7 +595,7 @@ def solve_sokoban_macro(warehouse):
 
 # TESTING OF FUNCTION DIRECTLY ON THIS FILE CAN DELETE AFTER
 wh = Warehouse()
-wh.load_warehouse("warehouses/warehouse_47.txt")
+wh.load_warehouse("warehouses/warehouse_07.txt")
 t0 = time.time()
 x = solve_sokoban_elem(wh)
 print(x)
