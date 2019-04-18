@@ -405,7 +405,7 @@ def solve_sokoban_elem(warehouse):
     actionDict = {'Up':(0,-1), 'Down':(0,1), 'Left':(-1,0), 'Right':(1,0)}
     
     initialStr = str(warehouse)
-    goalStr = str(warehouse).replace("$", " ").replace(".", "*").replace("@", " ")
+    goalStr = str(warehouse).replace("$", " ").replace(".", "*").replace("@", " ").replace("!", " ")
     # Initialise a puzzle with elementary actions
     puzzle = SokobanPuzzle(warehouse, initialStr, goalStr, macro = False)
     
@@ -428,10 +428,10 @@ def solve_sokoban_elem(warehouse):
     for eachBox, eachPush in macroSolutions:
         workerPos = (eachBox[0] - actionDict[eachPush][1], eachBox[1] - actionDict[eachPush][0])
         
-        # Solving CanGoThere problem with destination at workerPos
+        # Solving CanGoThere problem with destination at workerPos with Manhattan distance
         def heuristic(n):
             state = n.state
-            return math.sqrt((math.pow(state[1] - workerPos[1], 2)) + (math.pow(state[0] - workerPos[0], 2)))
+            return (abs(state[0]- workerPos[0]) + abs(state[1] - workerPos[1]))
         
         
         actionCoords = astar_graph_search(CanGoThereProblem(wh.worker, wh, (workerPos[1], workerPos[0])), heuristic)
@@ -506,10 +506,10 @@ def can_go_there(warehouse, dst, returnNode = False):
       False otherwise
     '''
     
-    # The heuristic is defined as the shortest distance from worker to destination
+    # The heuristic is defined as the Manhattan distance from worker to destination
     def heuristic(GoThereProblem):
         state = GoThereProblem.state
-        return math.sqrt((math.pow(state[1] - dst[1], 2)) + (math.pow(state[0] - dst[0], 2)))
+        return (abs(state[0]- dst[0]) + abs(state[1] - dst[1]))
 
     dst = (dst[1], dst[0])
     
@@ -546,7 +546,7 @@ def solve_sokoban_macro(warehouse):
     
     # Goal string is initial string where all boxes are on targets, represented by *
     # and player is removed so the final position of the player does not matter
-    goalStr = str(warehouse).replace("$", " ").replace(".", "*").replace("@", " ")
+    goalStr = str(warehouse).replace("$", " ").replace(".", "*").replace("@", " ").replace("!", " ")
     
     # A puzzle is initialised with the following variables and allow_taboo_push is set to false
     # to increase speed for testing
@@ -610,10 +610,10 @@ def solve_sokoban_macro(warehouse):
 
 
 # TESTING OF FUNCTION DIRECTLY ON THIS FILE CAN DELETE AFTER
-#wh = Warehouse()
-#wh.load_warehouse("warehouses/warehouse_05.txt")
-#t0 = time.time()
-#x = solve_sokoban_elem(wh)        
-#print(x)
-#t1 = time.time()
-#print ("Solver took ",t1-t0, ' seconds')
+wh = Warehouse()
+wh.load_warehouse("warehouses/warehouse_47.txt")
+t0 = time.time()
+x = solve_sokoban_elem(wh)        
+print(x)
+t1 = time.time()
+print ("Solver took ",t1-t0, ' seconds')
