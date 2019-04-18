@@ -576,15 +576,11 @@ def solve_sokoban_macro(warehouse):
         warehouseCurrent = Warehouse()
         warehouseCurrent.extract_locations(state.split(sep='\n'))
         hVal = 0
-        unavailable_targets = [] # Targets that are assigned to box
         for box in warehouseCurrent.boxes:
-            BT = {} # Dictionary of distance for each target and distance to it
+            BT = {}
             for target in warehouseCurrent.targets:
-                if target not in unavailable_targets:
-                    BT[target] = manhattanDistance(box, target)
-            # Gets the key(position of target) that has the smallest distance to assigned box and add to assigned
-            minBT = min(BT, key=BT.get) 
-            unavailable_targets.append(minBT)
+                BT[target] = manhattanDistance(box, target)
+            minBT = min(BT, key=BT.get)
             hVal += BT[minBT]
         return hVal
         
@@ -611,7 +607,7 @@ def solve_sokoban_macro(warehouse):
 
 # TESTING OF FUNCTION DIRECTLY ON THIS FILE CAN DELETE AFTER
 wh = Warehouse()
-wh.load_warehouse("warehouses/warehouse_47.txt")
+wh.load_warehouse("warehouses/warehouse_147.txt")
 t0 = time.time()
 x = solve_sokoban_elem(wh)        
 print(x)
