@@ -524,7 +524,6 @@ def can_go_there(warehouse, dst, returnNode = False):
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-## COORDINATE IS IN (y,x)
 def solve_sokoban_macro(warehouse):
     '''    
     Solve using macro actions the puzzle defined in the warehouse passed as
@@ -542,6 +541,8 @@ def solve_sokoban_macro(warehouse):
         Otherwise return M a sequence of macro actions that solves the puzzle.
         If the puzzle is already in a goal state, simply return []
     '''
+    ### COORDINATES IS IN (y,x)
+    
     initialStr = str(warehouse)
     
     # Goal string is initial string where all boxes are on targets, represented by *
@@ -557,34 +558,18 @@ def solve_sokoban_macro(warehouse):
     def manhattanDistance(square1, square2):
         return (abs(square1[0]- square2[0]) + abs(square1[1] - square2[1]))
 
-    
-    #Final
-#    def heuristic(n):
-#        state = n.state
-#        warehouseCurrent = Warehouse()
-#        warehouseCurrent.extract_locations(state.split(sep='\n'))
-#        hVal = []
-#        for box in warehouseCurrent.boxes:
-#            targetDistance = 0
-#            for target in warehouseCurrent.targets:
-#                hVal.append(manhattanDistance(box, target))
-#                
-#        return min(hVal)
-    
+
     def heuristic(n):
         state = n.state
         warehouseCurrent = Warehouse()
         warehouseCurrent.extract_locations(state.split(sep='\n'))
         hVal = 0
-        unavailable_targets = [] # Targets that are assigned to box
         for box in warehouseCurrent.boxes:
-            BT = {} # Dictionary of distance for each target and distance to it
+            BT = {}
             for target in warehouseCurrent.targets:
-                if target not in unavailable_targets:
-                    BT[target] = manhattanDistance(box, target)
-            # Gets the key(position of target) that has the smallest distance to assigned box and add to assigned
-            minBT = min(BT, key=BT.get) 
-            unavailable_targets.append(minBT)
+                BT[target] = manhattanDistance(box, target)
+            # Gets target coordinates that is the nearest to the current box
+            minBT = min(BT, key=BT.get)
             hVal += BT[minBT]
         return hVal
         
@@ -606,14 +591,4 @@ def solve_sokoban_macro(warehouse):
     return(nodes[1:])
     
 
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-
-# TESTING OF FUNCTION DIRECTLY ON THIS FILE CAN DELETE AFTER
-wh = Warehouse()
-wh.load_warehouse("warehouses/warehouse_47.txt")
-t0 = time.time()
-x = solve_sokoban_elem(wh)        
-print(x)
-t1 = time.time()
-print ("Solver took ",t1-t0, ' seconds')
+# - - - - - - - - - - - - - - -
