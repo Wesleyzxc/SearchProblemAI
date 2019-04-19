@@ -577,7 +577,6 @@ def solve_sokoban_macro(warehouse):
         return []
 
 #     Greedy first search is used to fasten process
-#    x = best_first_graph_search(puzzle, heuristic)
     x = astar_graph_search(puzzle, heuristic)    
     # Returns a list with string Impossible if no solution can be found
     if x is None:
@@ -591,13 +590,3 @@ def solve_sokoban_macro(warehouse):
     
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-
-# TESTING OF FUNCTION DIRECTLY ON THIS FILE CAN DELETE AFTER
-wh = Warehouse()
-wh.load_warehouse("warehouses/warehouse_147.txt")
-t0 = time.time()
-x = solve_sokoban_elem(wh)        
-print(x)
-t1 = time.time()
-print ("Solver took ",t1-t0, ' seconds')
