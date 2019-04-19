@@ -568,7 +568,6 @@ def solve_sokoban_macro(warehouse):
             BT = {}
             for target in warehouseCurrent.targets:
                 BT[target] = manhattanDistance(box, target)
-            # Gets target coordinates that is the nearest to the current box
             minBT = min(BT, key=BT.get)
             hVal += BT[minBT]
         return hVal
@@ -591,4 +590,14 @@ def solve_sokoban_macro(warehouse):
     return(nodes[1:])
     
 
-# - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+
+# TESTING OF FUNCTION DIRECTLY ON THIS FILE CAN DELETE AFTER
+wh = Warehouse()
+wh.load_warehouse("warehouses/warehouse_147.txt")
+t0 = time.time()
+x = solve_sokoban_elem(wh)        
+print(x)
+t1 = time.time()
+print ("Solver took ",t1-t0, ' seconds')
